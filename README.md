@@ -1,10 +1,10 @@
-# IoT Traffic Monitor
+# IoT Fleet Management
 
-Below is the architecture diagram for IoT Traffic Monitor application. Read the article at [InfoQ](https://www.infoq.com/articles/traffic-data-monitoring-iot-kafka-and-spark-streaming)
+This is a sample application that demos how Iot applications can leverage YugaByte as the database part of the SMACK stack. YugaByte is an open source cloud-native database for mission-critical applications. It supports the Cassandra Query Language (CQL) in addition to Redis and SQL (coming soon). This example uses CQL to layout the tables and perform queries.
 
-![IoT Traffic Monitor Architecture](https://github.com/baghelamit/iot-traffic-monitor/blob/master/iot-architecture.png)
+![IoT Fleet Management Architecture](https://github.com/YugaByte/yb-iot-fleet-management/blob/master/yb-iot-fleet-mgmt-architecture.png)
 
-Traffic Monitor application uses following tools and technologies.
+The fleet management application uses following:
 
 - JDK - 1.8
 - Maven - 3.3.9
@@ -19,7 +19,7 @@ Traffic Monitor application uses following tools and technologies.
 - Stomp.js
 - Chart.js
 
-IoT Traffic Monitor is a Maven Aggregator project. It includes following three projects.
+IoT Fleet Management includes following three projects:
 
 - IoT Kafka Producer
 - IoT Spark Processor
