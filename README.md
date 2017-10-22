@@ -7,7 +7,13 @@ This is a sample application that demos how Iot applications can leverage YugaBy
 
 Here is a brief description of the scenario.
 
-Assume that a fleet management company wants to track their fleet of vehicles, which are of different types (private cars, busses, large trucks, etc).
+Assume that a fleet management company wants to track their fleet of vehicles, which are of different types (18 Wheelers, busses, large trucks, etc).
+
+Below is a view of the dashboard of the running app.
+
+![IoT Fleet Management Dashboard](https://github.com/YugaByte/yb-iot-fleet-management/blob/master/yb-iot-fleet-management-screenshot.png)
+
+The above dashboard can be used to monitor the different vehicle types and the routes they have taken both over the lifetime of the app as well as over the last 30 second window. It also points out the trucks that are near road closures, which might cause a delay in the shipping schedule.
 
 
 ## Architecture
