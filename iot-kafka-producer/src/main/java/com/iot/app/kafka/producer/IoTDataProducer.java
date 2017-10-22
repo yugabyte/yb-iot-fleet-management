@@ -60,7 +60,7 @@ public class IoTDataProducer {
 	 */
 	private void generateIoTEvent(Producer<String, IoTData> producer, String topic) throws InterruptedException {
 		List<String> routeList = Arrays.asList(new String[]{"Route-37", "Route-43", "Route-82"});
-		List<String> vehicleTypeList = Arrays.asList(new String[]{"Large Truck", "Small Truck", "Private Car", "Bus", "Taxi"});
+		List<String> vehicleTypeList = Arrays.asList(new String[]{"Large Truck", "Small Truck", "Van", "18 Wheeler", "Car"});
 		Random rand = new Random();
 		logger.info("Sending events");
 		// generate event in loop
