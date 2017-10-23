@@ -1,6 +1,6 @@
 # IoT Fleet Management
 
-This is a sample application that demos how Iot applications can leverage YugaByte as the database part of the SMACK stack. YugaByte is an open source cloud-native database for mission-critical applications. It supports the Cassandra Query Language (CQL) in addition to Redis and SQL (coming soon). This example uses CQL to layout the tables and perform queries.
+This is a sample application that demos how IoT applications can leverage YugaByte as the database part of the SMACK stack. YugaByte is an open source cloud-native database for mission-critical applications. It supports the Cassandra Query Language (CQL) in addition to Redis and SQL (coming soon). This example uses CQL to layout the tables and perform queries.
 
 
 ## Scenario
