@@ -66,9 +66,8 @@ If this is a new installation, create the Kafka topic. Note that this needs to b
 ```
 
 4. Install YugaByte and create the needed keyspaces.
-- Download YugaByte [here](https://www.yugabyte.com/#download).
-- Start the local cluster using the quick-start instructions [here](https://docs.yugabyte.com/community-edition/quick-start/).
-- Create the necessary keyspaces. You can find `cqlsh` in the `bin` sub-directory located inside the YugaByte installation folder. See the details [here](https://docs.yugabyte.com/community-edition/quick-start/#test-cql-service).
+- [Install YugaByte and start a local cluster](https://docs.yugabyte.com/quick-start/install/).
+- Create the necessary keyspaces by running the following command. You can find `cqlsh` in the `bin` sub-directory located inside the YugaByte installation folder.
 ```sh
 cqlsh -f iot-springboot-dashboard/IoTData.cql
 ```
