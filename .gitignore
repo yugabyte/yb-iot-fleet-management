@@ -1,0 +1,25 @@
+build
+logs
+target
+.idea
+.idea_modules
+/.classpath
+/.project
+/.settings
+/RUNNING_PID
+dependency-reduced-pom.xml
+
+# VIM/emacs stuff
+*.swp
+*~
+core*
+
+oprofile_data
+.metadata/
+*.iml
+
+app/.DS_STORE
+.DS_Store
+app/views/.DS_Store
+
+
