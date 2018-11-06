@@ -12,9 +12,9 @@ This project requires following tools.
 
 
 ## Running the Kafka sinks
-Please perform the following steps from the top level directory in this repo.
+Please perform the following steps from the *top level directory* of this repo.
 
-- Create a topic.
+- Create the origin topic.
 ```
 ~/yb-kafka/confluent-os/confluent-5.0.0/bin/kafka-topics --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic iot-data-event
 ```
@@ -26,23 +26,28 @@ exit
 EOF
 ```
 
-- Setup the property files for Connect Sink
+- Setup the property files for Connect Sink.
 ```
 cp iot-ksql-processor/resources/kafka.connect.properties ~/yb-kafka/confluent-os/confluent-5.0.0/etc/kafka/
 cp iot-ksql-processor/resources/*.sink.properties ~/yb-kafka/confluent-os/confluent-5.0.0/etc/kafka-connect-yugabyte
 ```
 
-- Create the YugaByte DB tables
+- Create the YugaByte DB tables.
 ```
 cqlsh -f resources/IoTData.cql
 ```
 
-- Run the sink to save processed data to tables
+- Run the Kafka producer app, if not already done.
+```
+java -jar iot-kafka-producer/target/iot-kafka-producer-1.0.0.jar
+```
+
+- Run the sink to save processed data to tables.
 ```
 cd ~/yb-kafka/confluent-os/confluent-5.0.0; ./bin/connect-standalone ./etc/kafka/kafka.connect.properties ./etc/kafka-connect-yugabyte/total_traffic.sink.properties ./etc/kafka-connect-yugabyte/window_traffic.sink.properties ./etc/kafka-connect-yugabyte/poi_traffic.sink.properties ./etc/kafka-connect-yugabyte/origin.sink.properties
 ```
 
-- Check that the tables are getting populated using cqlsh
+- Check that the tables are getting populated using cqlsh.
 ```
 select count(*) from TrafficKeySpace.Origin_Table;
 select count(*) from TrafficKeySpace.Total_Traffic;
