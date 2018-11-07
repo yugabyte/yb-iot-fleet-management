@@ -41,9 +41,11 @@ The IoT Fleet Management application contains the following four components:
 - IoT Spring Boot Dashboard
   This app uses the Java Spring Boot framework with its integration for Cassandra as the data layer, using the Cassandra Query Language (CQL) internally.
 
-[Architecture with KSQL](https://github.com/YugaByte/yb-iot-fleet-management/blob/master/yb-iot-fleet-mgmt-ksql-arch.png)
+### Architecture with KSQL
+![Architecture with KSQL](https://github.com/YugaByte/yb-iot-fleet-management/blob/master/yb-iot-fleet-mgmt-ksql-arch.png)
 
-[Architecture with Apache Spark Streaming](https://github.com/YugaByte/yb-iot-fleet-management/blob/master/yb-iot-fleet-mgmt-spark-arch.png)
+### Architecture with Apache Spark Streaming
+![Architecture with Apache Spark Streaming](https://github.com/YugaByte/yb-iot-fleet-management/blob/master/yb-iot-fleet-mgmt-spark-arch.png)
 
 ## Prerequisites
 
