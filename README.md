@@ -29,9 +29,9 @@ The IoT Fleet Management application contains the following four components:
 
 - IoT Real-Time Data Processor
   This component reads data from Kafka topic `iot-data-event` and computes the following:
-  -- Total traffic snapshot
-  -- Last 30 seconds traffic snapshot
-  -- Vehicles near a point of interest
+  - Total traffic snapshot
+  - Last 30 seconds traffic snapshot
+  - Vehicles near a point of interest
 
   There are two ways the app can perform this analysis. First is through KSQL, Confluent's SQL-like streaming query language for Kafka, and second is through Apache Spark as an external stream processing engine.
 
@@ -41,10 +41,9 @@ The IoT Fleet Management application contains the following four components:
 - IoT Spring Boot Dashboard
   This app uses the Java Spring Boot framework with its integration for Cassandra as the data layer, using the Cassandra Query Language (CQL) internally.
 
-Architecture with KSQL
+[Architecture with KSQL](https://github.com/YugaByte/yb-iot-fleet-management/blob/master/yb-iot-fleet-mgmt-ksql-arch.png)
 
-
-Architecture with Apache Spark Streaming
+[Architecture with Apache Spark Streaming](https://github.com/YugaByte/yb-iot-fleet-management/blob/master/yb-iot-fleet-mgmt-spark-arch.png)
 
 ## Prerequisites
 
