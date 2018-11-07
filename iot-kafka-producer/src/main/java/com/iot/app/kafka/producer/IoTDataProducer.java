@@ -86,7 +86,7 @@ public class IoTDataProducer {
 				event.setTimestamp(new Date());
 				KeyedMessage<String, IoTData> data = new KeyedMessage<String, IoTData>(topic, event);
 				producer.send(data);
-				Thread.sleep(rand.nextInt(500 - 100) + 100);//random delay of 0.1 to 0.5 seconds
+				Thread.sleep(rand.nextInt(1000 - 500) + 500);//random delay of 0.5 to 1 second
 			}
 		}
 	}

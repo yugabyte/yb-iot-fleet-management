@@ -45,34 +45,97 @@ The above is a high level architecture diagram of the IoT Fleet Management appli
 For building these projects it requires following tools. Please refer README.md files of individual projects for more details.
 - JDK - 1.8 +
 - Maven - 3.3 +
-- Apache Kafka (we assume this is installed in the `/opt/kafka/` directory.
+- Confluent Open Source - 5.0.0 (we assume this is installed in the `~/yb-kafka/confluent-os/confluent-5.0.0` directory).
+- YugaByte Connect sink - 1.0.0 (clone this into `~/yb-kafka/yb-kafka-connector`).
 
+## Steps to setup the environment
 1. Build the required binaries.
-```sh
-mvn package
-```
+   ```sh
+   mvn package
+   ```
 
-2. Start Zookeeper.
-```sh
-/opt/kafka/bin/zookeeper-server-start.sh /opt/kafka/config/zookeeper.properties
-```
+2. Download Confluent Open Source from https://www.confluent.io/download/. This is a manual step, since an email id is needed to register (as of Nov 2018).
+   Unbundle the content of the tar.gz to location `~/yb-kafka/confluent-os/confluent-5.0.0` using these steps.
+   ```
+   mkdir -p ~/yb-kafka/confluent-os
+   cd ~/yb-kafka/confluent-os
+   tar -xvf confluent-5.0.0-2.11.tar.gz
+   ```
 
-3. Start Kafka and create the Kafka topic if this is a new installation.
-```sh
-/opt/kafka/bin/kafka-server-start.sh /opt/kafka/config/server.properties
-```
+3. Include dependent components into Kafka connectors:
+  - Build the jar from this repo and copy it for use by Kafka:
+    ```
+    cd  ~/yb-kafka/
+    git clone https://github.com/YugaByte/yb-kafka-connector.git
+    cd  ~/yb-kafka/yb-kafka-connector/
+    mvn clean install -DskipTests
+    mkdir ~/yb-kafka/confluent-os/confluent-5.0.0/share/java/kafka-connect-yugabyte/
+    cp  ~/yb-kafka/yb-kafka-connector/target/yb-kafka-connnector-1.0.0.jar ~/yb-kafka/confluent-os/confluent-5.0.0/share/java/kafka-connect-yugabyte/
+    ```
+  - Setup the property files for use by Connect Sink.
+    ```
+    cp iot-ksql-processor/resources/kafka.connect.properties ~/yb-kafka/confluent-os/confluent-5.0.0/etc/kafka/
+    cp iot-ksql-processor/resources/*.sink.properties ~/yb-kafka/confluent-os/confluent-5.0.0/etc/kafka-connect-yugabyte
+    ```
+  - Download the dependent jars from maven central repository using the following commands.
+    ```
+    cd ~/yb-kafka/confluent-os/confluent-5.0.0/share/java/kafka-connect-yugabyte/
+    wget http://central.maven.org/maven2/io/netty/netty-all/4.1.25.Final/netty-all-4.1.25.Final.jar
+    wget http://central.maven.org/maven2/com/yugabyte/cassandra-driver-core/3.2.0-yb-18/cassandra-driver-core-3.2.0-yb-18.jar
+    wget http://central.maven.org/maven2/com/codahale/metrics/metrics-core/3.0.1/metrics-core-3.0.1.jar
+    ```
 
-If this is a new installation, create the Kafka topic. Note that this needs to be done only once.
-```sh
-/opt/kafka/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic iot-data-event
-```
+    The final list of jars should look like this:
+    ```
+     $ ls -al
+      -rw-r--r--@    85449 Oct 27  2013 metrics-core-3.0.1.jar
+      -rw-r--r--@  3823147 Oct 27 15:18 netty-all-4.1.25.Final.jar
+      -rw-r--r--   1100520 Oct 29 11:18 cassandra-driver-core-3.2.0-yb-18.jar
+      -rw-r--r--     14934 Oct 29 11:19 yb-kafka-connnector-1.0.0.jar
+     ```
 
-Note that the topic name should match the `com.iot.app.kafka.topic` value in `iot-kafka-producer/src/main/resources/iot-kafka.properties`.
+4. Do the following to run Kafka and related components:
+   ```
+   export PATH=$PATH:~/yb-kafka/confluent-os/confluent-5.0.0/bin
+   confluent start ksql-server
+   confluent status
+   ```
 
-4. Install YugaByte
-- [Install YugaByte](https://docs.yugabyte.com/quick-start/install/) and start a local cluster.
+   The output for the `confluent status` should look like
+   ```
+   control-center is [DOWN]
+   ksql-server is [UP]
+   connect is [DOWN]
+   kafka-rest is [DOWN]
+   schema-registry is [UP]
+   kafka is [UP]
+   zookeeper is [UP]
+   ```
+   *Note*: It is required that the `DOWN` components in this list are not actually enabled.
+
+5. Create the origin Kafka topic
+   ```
+    ~/yb-kafka/confluent-os/confluent-5.0.0/bin/kafka-topics --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic iot-data-event
+    ```
+
+6. Install YugaByte DB and create the keyspace/table.
+   - [Install YugaByte DB and start a local cluster](https://docs.yugabyte.com/quick-start/install/).
+
+7. Create the YugaByte tables
+   - Create a keyspace and tables by running the following command. You can find `cqlsh` in the `bin` sub-directory located inside the YugaByte installation folder.
+     ```
+     $> cqlsh -f resources/IoTData.cql
+     ```
+
+8. Run the origin topic YugaByte Connect Sink
+   ```
+   cd ~/yb-kafka/confluent-os/confluent-5.0.0
+   nohup ./bin/connect-standalone ./etc/kafka/kafka.connect.properties ./etc/kafka-connect-yugabyte/origin.sink.properties >& origin_sink.txt &
+   ```
+   This will insert the origin topic data into the YugaByte DB CQL table `TrafficKeySpace.Origin_Table`.
 
 ## Running the application
+From the top level directory of this repo, run the following
 
 1. Start the data producer.
    ```sh
@@ -89,16 +152,23 @@ Note that the topic name should match the `com.iot.app.kafka.topic` value in `io
 2. Start the data processing application
   Use either of these options:
   - Spark
-    - Create the necessary keyspaces and tables by running the following command. You can find [`cqlsh`](https://docs.yugabyte.com/latest/develop/tools/cqlsh/) in the `bin` sub-directory located inside the YugaByte installation folder.
-      ```sh
-      cqlsh -f resources/IoTData.cql
-      ```
-      Then run the sprk app.
+    - Run the spark app using this
       ```sh
       java -jar iot-spark-processor/target/iot-spark-processor-1.0.0.jar
       ```
   - KSQL
-    Run the steps stated [here](https://github.com/YugaByte/yb-iot-fleet-management/blob/master/iot-ksql-processor/README.md).
+    - Setup the KSQL tables/streams
+      ```
+      ksql <<EOF
+      RUN SCRIPT './iot-ksql-processor/setup_streams.ksql';
+      exit
+      EOF
+      ```
+    - Run the connect sink from KSQL processed data
+      ```
+      cd ~/yb-kafka/confluent-os/confluent-5.0.0
+      nohup ./bin/connect-standalone ./etc/kafka/kafka.connect.properties ./etc/kafka-connect-yugabyte/total_traffic.sink.properties ./etc/kafka-connect-yugabyte/window_traffic.sink.properties ./etc/kafka-connect-yugabyte/poi_traffic.sink.properties >& ksql_sink.txt &
+      ```
 
 3. Start the UI application.
    ```sh

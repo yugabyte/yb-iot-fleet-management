@@ -6,19 +6,12 @@ IoT KSQL Processor provides a sequence of steps to setup and process Kafka strea
 This project requires following tools.
 - Confluent 5.0.0 or later, for KSQL. Assumed to be installed in `~/yb-kafka/confluent-os/confluent-5.0.0`.
 - YugaByte DB, [installed](https://docs.yugabyte.com/quick-start/install/) and local cluster started up. `cqlsh` is present in this install.
-
-
-*Note*: The steps 1 through 5 from [YugaByte Kafka Connect](https://github.com/YugaByte/yb-kafka-connector) should be performed before running the following steps.
-
+- The setup steps from the top-level [README](https://github.com/YugaByte/yb-iot-fleet-management/blob/master/README.md) should have been performed.
 
 ## Running real-time IoT KSQL processor
 Please perform the following steps from the *top level directory* of this repo.
 
-- Create the origin topic.
-```
-~/yb-kafka/confluent-os/confluent-5.0.0/bin/kafka-topics --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic iot-data-event
-```
-- Create the ksql streams/tables.
+- Create the KSQL streams/tables.
 ```
 ksql <<EOF
 RUN SCRIPT './iot-ksql-processor/setup_streams.ksql';
@@ -26,26 +19,10 @@ exit
 EOF
 ```
 
-- Setup the property files for Connect Sink.
-```
-cp iot-ksql-processor/resources/kafka.connect.properties ~/yb-kafka/confluent-os/confluent-5.0.0/etc/kafka/
-cp iot-ksql-processor/resources/*.sink.properties ~/yb-kafka/confluent-os/confluent-5.0.0/etc/kafka-connect-yugabyte
-```
-
-- Create the YugaByte DB tables.
-```
-cqlsh -f resources/IoTData.cql
-```
-
-- Run the Kafka producer app, if not already done.
-```
-java -jar iot-kafka-producer/target/iot-kafka-producer-1.0.0.jar
-```
-
 - Run the connect sink to save KSQL processed data to tables.
 ```
-cd ~/yb-kafka/confluent-os/confluent-5.0.0;
-./bin/connect-standalone ./etc/kafka/kafka.connect.properties ./etc/kafka-connect-yugabyte/total_traffic.sink.properties ./etc/kafka-connect-yugabyte/window_traffic.sink.properties ./etc/kafka-connect-yugabyte/poi_traffic.sink.properties ./etc/kafka-connect-yugabyte/origin.sink.properties
+cd ~/yb-kafka/confluent-os/confluent-5.0.0
+./bin/connect-standalone ./etc/kafka/kafka.connect.properties ./etc/kafka-connect-yugabyte/total_traffic.sink.properties ./etc/kafka-connect-yugabyte/window_traffic.sink.properties ./etc/kafka-connect-yugabyte/poi_traffic.sink.properties
 ```
 
 - Check that the tables are getting populated using `cqlsh`.
