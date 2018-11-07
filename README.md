@@ -1,7 +1,8 @@
 # IoT Fleet Management
 
-This is a sample application that demos how IoT applications can leverage YugaByte as the database part of the SMACK stack. YugaByte is an open source cloud-native database for mission-critical applications. It supports the Cassandra Query Language (CQL) in addition to Redis and SQL (coming soon). This example uses CQL to layout the tables and perform queries.
+YugaByte DB is world's 1st open source database that is both NoSQL (Cassandra & Redis compatible) and SQL (PostgreSQL compatible) at the same time. It is purpose-built to power fast-growing online services on public, private and hybrid clouds with transactional data integrity, low latency, high throughput and multi-region scalability while also using popular NoSQL and SQL APIs.
 
+This is a sample application that show how real-time streaming applications (such as those in the IoT vertical) can leverage YugaByte DB as a highly reliable, elastic operational database. It uses YugaByte DB's Cassandra-compatible YCQL API.
 
 ## Scenario
 
@@ -18,9 +19,7 @@ The above dashboard can be used to monitor the different vehicle types and the r
 
 ## Architecture
 
-![IoT Fleet Management Architecture](https://github.com/YugaByte/yb-iot-fleet-management/blob/master/yb-iot-fleet-mgmt-arch.png)
-
-The above is a high level architecture diagram of the IoT Fleet Management application. It contains the following three components:
+The IoT Fleet Management application contains the following four components:
 
 - IoT Kafka Producer
   This component emulates data being emitted from a connected vehicle, and generates data for the Kafka topic `iot-data-event`. The data emitted is of the format shown below.
@@ -28,17 +27,24 @@ The above is a high level architecture diagram of the IoT Fleet Management appli
   {"vehicleId":"0bf45cac-d1b8-4364-a906-980e1c2bdbcb","vehicleType":"Taxi","routeId":"Route-37","longitude":"-95.255615","latitude":"33.49808","timestamp":"2017-10-16 12:31:03","speed":49.0,"fuelLevel":38.0}
   ```
 
-- IoT real-time data processor
+- IoT Real-Time Data Processor
   This component reads data from Kafka topic `iot-data-event` and computes the following:
   -- Total traffic snapshot
   -- Last 30 seconds traffic snapshot
   -- Vehicles near a point of interest
 
-  There are two ways the app provides for performing this analysis. There is a Spark based processor and KSQL based on Kafka.
+  There are two ways the app can perform this analysis. First is through KSQL, Confluent's SQL-like streaming query language for Kafka, and second is through Apache Spark as an external stream processing engine.
+
+- IoT Database
+  This component is based on YugaByte DB. YugaByte DB's Cassandra-compatible YCQL API is used to integrate with other components of the app.
 
 - IoT Spring Boot Dashboard
   This app uses the Java Spring Boot framework with its integration for Cassandra as the data layer, using the Cassandra Query Language (CQL) internally.
 
+Architecture with KSQL
+
+
+Architecture with Apache Spark Streaming
 
 ## Prerequisites
 
@@ -127,7 +133,7 @@ For building these projects it requires following tools. Please refer README.md 
      $> cqlsh -f resources/IoTData.cql
      ```
 
-8. Run the origin topic YugaByte Connect Sink
+8. Run the origin topic YugaByte DB Connect Sink
    ```
    cd ~/yb-kafka/confluent-os/confluent-5.0.0
    nohup ./bin/connect-standalone ./etc/kafka/kafka.connect.properties ./etc/kafka-connect-yugabyte/origin.sink.properties >& origin_sink.txt &
