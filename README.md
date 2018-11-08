@@ -2,7 +2,7 @@
 
 YugaByte DB is world's 1st open source database that is both NoSQL (Cassandra & Redis compatible) and SQL (PostgreSQL compatible) at the same time. It is purpose-built to power fast-growing online services on public, private and hybrid clouds with transactional data integrity, low latency, high throughput and multi-region scalability while also using popular NoSQL and SQL APIs.
 
-This is a sample application that show how real-time streaming applications (such as those in the IoT vertical) can leverage YugaByte DB as a highly reliable, elastic operational database. It uses YugaByte DB's Cassandra-compatible YCQL API.
+This is a sample application that shows how real-time streaming applications (such as those in the IoT vertical) can leverage YugaByte DB as a highly reliable, elastic operational database. It uses YugaByte DB's Cassandra-compatible YCQL API.
 
 ## Scenario
 
@@ -124,12 +124,13 @@ For building these projects it requires following tools. Please refer README.md 
    ```
     ~/yb-kafka/confluent-os/confluent-5.0.0/bin/kafka-topics --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic iot-data-event
     ```
+   *Note*: This is needed to be done only the first time.
 
-6. Install YugaByte DB and create the keyspace/table.
+6. Install YugaByte DB.
    - [Install YugaByte DB and start a local cluster](https://docs.yugabyte.com/quick-start/install/).
 
-7. Create the YugaByte tables
-   - Create a keyspace and tables by running the following command. You can find `cqlsh` in the `bin` sub-directory located inside the YugaByte installation folder.
+7. Create the YugaByte DB tables
+   - Create the keyspaces and tables by running the following command. You can find `cqlsh` in the `bin` sub-directory located inside the YugaByte installation folder.
      ```
      $> cqlsh -f resources/IoTData.cql
      ```
