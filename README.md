@@ -81,7 +81,7 @@ For building these projects it requires following tools. Please refer README.md 
     ```
   - Setup the property files for use by Connect Sink.
     ```
-    cp iot-ksql-processor/resources/kafka.connect.properties ~/yb-kafka/confluent-os/confluent-5.0.0/etc/kafka/
+    cp iot-ksql-processor/resources/kafka.*connect.properties ~/yb-kafka/confluent-os/confluent-5.0.0/etc/kafka/
     cp iot-ksql-processor/resources/*.sink.properties ~/yb-kafka/confluent-os/confluent-5.0.0/etc/kafka-connect-yugabyte
     ```
   - Download the dependent jars from maven central repository using the following commands.
@@ -175,7 +175,7 @@ From the top level directory of this repo, run the following
     - Run the connect sink from KSQL processed data
       ```
       cd ~/yb-kafka/confluent-os/confluent-5.0.0
-      nohup ./bin/connect-standalone ./etc/kafka/kafka.connect.properties ./etc/kafka-connect-yugabyte/total_traffic.sink.properties ./etc/kafka-connect-yugabyte/window_traffic.sink.properties ./etc/kafka-connect-yugabyte/poi_traffic.sink.properties >& ksql_sink.txt &
+      nohup ./bin/connect-standalone ./etc/kafka/kafka.ksql.connect.properties ./etc/kafka-connect-yugabyte/total_traffic.sink.properties ./etc/kafka-connect-yugabyte/window_traffic.sink.properties ./etc/kafka-connect-yugabyte/poi_traffic.sink.properties >& ksql_sink.txt &
       ```
 
 3. Start the UI application.
