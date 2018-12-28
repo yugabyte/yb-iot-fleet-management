@@ -56,12 +56,18 @@ For building these projects it requires following tools. Please refer README.md 
 - YugaByte Connect sink - 1.0.0 (clone this into `~/yb-kafka/yb-kafka-connector`).
 
 ## Steps to setup the environment
-1. Build the required binaries.
+1. Clone this repository.
+  ```sh
+  git clone https://github.com/YugaByte/yb-iot-fleet-management.git ~
+  ```
+
+2. Build the required binaries.
    ```sh
+   cd ~/yb-iot-fleet-management
    mvn package
    ```
 
-2. Download Confluent Open Source from https://www.confluent.io/download/. This is a manual step, since an email id is needed to register (as of Nov 2018).
+3. Download Confluent Open Source from https://www.confluent.io/download/. This is a manual step, since an email id is needed to register (as of Nov 2018).
    Unbundle the content of the tar.gz to location `~/yb-kafka/confluent-os/confluent-5.0.0` using these steps.
    ```
    mkdir -p ~/yb-kafka/confluent-os
@@ -69,7 +75,7 @@ For building these projects it requires following tools. Please refer README.md 
    tar -xvf confluent-5.0.0-2.11.tar.gz
    ```
 
-3. Include dependent components into Kafka connectors:
+4. Include dependent components into Kafka connectors:
   - Build the jar from this repo and copy it for use by Kafka:
     ```
     cd  ~/yb-kafka/
@@ -81,6 +87,7 @@ For building these projects it requires following tools. Please refer README.md 
     ```
   - Setup the property files for use by Connect Sink.
     ```
+    cd ~/yb-iot-fleet-management
     cp iot-ksql-processor/resources/kafka.*connect.properties ~/yb-kafka/confluent-os/confluent-5.0.0/etc/kafka/
     cp iot-ksql-processor/resources/*.sink.properties ~/yb-kafka/confluent-os/confluent-5.0.0/etc/kafka-connect-yugabyte
     ```
@@ -101,7 +108,7 @@ For building these projects it requires following tools. Please refer README.md 
       -rw-r--r--     14934 Oct 29 11:19 yb-kafka-connnector-1.0.0.jar
      ```
 
-4. Do the following to run Kafka and related components:
+5. Do the following to run Kafka and related components:
    ```
    export PATH=$PATH:~/yb-kafka/confluent-os/confluent-5.0.0/bin
    confluent start ksql-server
@@ -120,22 +127,22 @@ For building these projects it requires following tools. Please refer README.md 
    ```
    *Note*: It is required that the `DOWN` components in this list are not actually enabled.
 
-5. Create the origin Kafka topic
+6. Create the origin Kafka topic
    ```
     ~/yb-kafka/confluent-os/confluent-5.0.0/bin/kafka-topics --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic iot-data-event
     ```
    *Note*: This is needed to be done only the first time.
 
-6. Install YugaByte DB.
+7. Install YugaByte DB.
    - [Install YugaByte DB and start a local cluster](https://docs.yugabyte.com/quick-start/install/).
 
-7. Create the YugaByte DB tables
+8. Create the YugaByte DB tables
    - Create the keyspaces and tables by running the following command. You can find `cqlsh` in the `bin` sub-directory located inside the YugaByte installation folder.
      ```
      $> cqlsh -f resources/IoTData.cql
      ```
 
-8. Run the origin topic YugaByte DB Connect Sink
+9. Run the origin topic YugaByte DB Connect Sink
    ```
    cd ~/yb-kafka/confluent-os/confluent-5.0.0
    nohup ./bin/connect-standalone ./etc/kafka/kafka.connect.properties ./etc/kafka-connect-yugabyte/origin.sink.properties >& origin_sink.txt &
@@ -147,6 +154,7 @@ From the top level directory of this repo, run the following
 
 1. Start the data producer.
    ```sh
+   cd ~/yb-iot-fleet-management
    java -jar iot-kafka-producer/target/iot-kafka-producer-1.0.0.jar
    ```
 
@@ -180,7 +188,7 @@ From the top level directory of this repo, run the following
 
 3. Start the UI application.
    ```sh
-   java -jar iot-springboot-dashboard/target/iot-springboot-dashboard-1.0.0.jar
+   java -jar ~/yb-iot-fleet-management/iot-springboot-dashboard/target/iot-springboot-dashboard-1.0.0.jar
    ```
 
 4. Now open the dashboard UI in a web browser. The application will refresh itself periodically.
