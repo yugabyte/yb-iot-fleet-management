@@ -89,6 +89,7 @@ For building these projects it requires following tools. Please refer README.md 
     ```
     cd ~/yb-iot-fleet-management
     cp iot-ksql-processor/resources/kafka.*connect.properties ~/yb-kafka/confluent-os/confluent-5.0.0/etc/kafka/
+    mkdir -p ~/yb-kafka/confluent-os/confluent-5.0.0/etc/kafka-connect-yugabyte
     cp iot-ksql-processor/resources/*.sink.properties ~/yb-kafka/confluent-os/confluent-5.0.0/etc/kafka-connect-yugabyte
     ```
   - Download the dependent jars from maven central repository using the following commands.
