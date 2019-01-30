@@ -55,7 +55,10 @@ For building these projects it requires following tools. Please refer README.md 
 - Confluent Open Source - 5.0.0 (we assume this is installed in the `~/yb-kafka/confluent-os/confluent-5.0.0` directory).
 - YugaByte Connect sink - 1.0.0 (clone this into `~/yb-kafka/yb-kafka-connector`).
 
-## Steps to setup the environment
+## Run using kubernetes
+Refer [here](https://github.com/YugaByte/yb-iot-fleet-management/tree/master/kubernetes/helm) for the setup and run steps using a helm based kubernetes environment.
+
+## Steps to setup local environment
 1. Clone this repository.
   ```sh
   git clone https://github.com/YugaByte/yb-iot-fleet-management.git ~

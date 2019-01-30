@@ -32,8 +32,17 @@ public class IoTDataProducer {
 		//read config file
 		Properties prop = PropertyFileReader.readPropertyFile();		
 		String zookeeper = prop.getProperty("com.iot.app.kafka.zookeeper");
+		if (System.getProperty("com.iot.app.kafka.zookeeper") != null) {
+                    zookeeper = System.getProperty("com.iot.app.kafka.zookeeper");
+		}
 		String brokerList = prop.getProperty("com.iot.app.kafka.brokerlist");
+		if (System.getProperty("com.iot.app.kafka.brokerlist") != null) {
+                    brokerList  = System.getProperty("com.iot.app.kafka.brokerlist");
+		}
 		String topic = prop.getProperty("com.iot.app.kafka.topic");
+		if (System.getProperty("com.iot.app.kafka.topic") != null) {
+                    topic  = System.getProperty("com.iot.app.kafka.topic");
+		}
 		logger.info("Using Zookeeper=" + zookeeper + " ,Broker-list=" + brokerList + " and topic " + topic);
 
 		// set producer properties
