@@ -2,7 +2,7 @@
 
 This page has details on deploying [Fleet Management IoT App](https://github.com/YugaByte/yb-iot-fleet-management) on [Kubernetes](https://kubernetes.io) using the `Helm Charts` feature. [Helm Charts](https://github.com/kubernetes/charts) can be used to deploy the app and its necessary dependencies on any configuration that customer prefers.
 
-## Requirements
+## Setup Requirements
 ### Install Helm: 2.8.0 or later
 One can install helm by following [these instructions](https://github.com/kubernetes/helm#install).
 Check the version of helm installed using the following command:
@@ -12,13 +12,15 @@ Client: &version.Version{SemVer:"v2.12.3", GitCommit:"eecf22f77df5f65c823aacd2db
 Server: &version.Version{SemVer:"v2.12.3", GitCommit:"eecf22f77df5f65c823aacd2dbd30ae6c65f186e", GitTreeState:"clean"}
 ```
 
-## Configuration
+### Configuration
 Any one of the following container/kubernetes runtime environments will work.
 - [Google Kubernetes Engine (GKE)](https://cloud.google.com/kubernetes-engine/)
 - [Pivotal Container Service (PKS)](https://pivotal.io/platform/pivotal-container-service)
 - [Minikube](https://kubernetes.io/docs/setup/minikube/) version 0.33+
+The [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) tool should point to one of these clusters.
 
-## Clone the repositories
+
+### Clone the repositories
 First, we setup the required repositories:
 ```
 mkdir -p ~/code
@@ -84,7 +86,7 @@ Created topic "iot-data-event".
 ```
 This needs to be done only once per Kafka cluster.
 
-## Setup YB Connect Sink dependencies
+## Setup YugaByte Connect Sink dependencies
 The [YugaByte Connect Sink](https://github.com/YugaByte/yb-kafka-connector) related depedencies and properties files can be copied into the Kafka cluster using the following steps.
 
 First download the dependent jars
@@ -120,7 +122,7 @@ cd ~/code/yb-iot-fleet-management/iot-ksql-processor/resources
 kubectl cp kubernetes/ kafka-demo-cp-kafka-0:/etc/kafka -c cp-kafka-broker
 ```
 
-## Setup the KSQL streams/tables
+### Setup the KSQL streams/tables
 
 First create the ksql cli client pod using the example in the `cp-helm-charts` repo
 
@@ -140,7 +142,7 @@ exit
 EOF
 ```
 
-## Start the YugaByte Kafka Connect sink
+### Start the YugaByte Kafka Connect sink
 
 Run the connect script for the origin table to be saved. The TTL set on that table DDL will purge older data automatically.
 ```
@@ -152,7 +154,7 @@ Similarly for the other aggregated tables, setup the sink connectors:
 kubectl exec -it kafka-demo-cp-kafka-0  -c cp-kafka-broker /usr/bin/connect-standalone -- /etc/kafka/kubernetes/kafka.ksql.connect.properties /etc/kafka/kubernetes/total_traffic.sink.properties /etc/kafka/kubernetes/window_traffic.sink.properties /etc/kafka/kubernetes/poi_traffic.sink.properties
 ```
 
-## Start the Iot App
+## Start the IoT App
 
 Grab the Kafka, Zookeeper and YB-tserver headless service names:
 ```
@@ -179,7 +181,7 @@ This pods has two containers:
 - one ingests data into the origin topic of `iot-data-event`, which also get transformed into other streams/tables via KSQL.
 - other reads the tables from YugaByte DB and reports in the springboard based UI.
 
-## Check the IoT App UI
+### Check the IoT App UI
 Using the `EXTERNAL-IP`:8080 from app's load balancer service, one can see the visual output of the fleet movement analytics.
 ```
 $ kubectl get services
