@@ -13,11 +13,13 @@ Server: &version.Version{SemVer:"v2.12.3", GitCommit:"eecf22f77df5f65c823aacd2db
 ```
 
 ### Configuration
-Any one of the following container/kubernetes runtime environments will work.
+Any one of the following container/kubernetes runtime environments will work. Having 4+ CPUS and 10+GB of RAM should help.
+
 - [Google Kubernetes Engine (GKE)](https://cloud.google.com/kubernetes-engine/)
 - [Pivotal Container Service (PKS)](https://pivotal.io/platform/pivotal-container-service)
-- [Minikube](https://kubernetes.io/docs/setup/minikube/) version 0.33+
-The [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) tool should point to one of these clusters.
+- [Minikube](https://kubernetes.io/docs/setup/minikube/) version 0.33+. *Tip* Use *minikube start --cpus 4 --memory 6144* option to increase its resource allowance.
+
+The [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) tool should be made to point to one of these clusters.
 
 
 ### Clone the repositories
@@ -33,14 +35,18 @@ git clone https://github.com/YugaByte/yb-kafka-connector.git
 
 These contain the helm charts need for the three main components: Kafka producer, YugaByte DB sink and the current IoT App.
 
+*Note*: We plan to pre-package all these helm charts, so as to avoid all the git clones.
+
 ## Install YugaByte DB
 Install a YugaByte DB cluster using [these instructions](https://docs.yugabyte.com/latest/deploy/kubernetes/helm-chart/).
 
-Sample command to setup single yb-master and single yb-tserver [YugaByte DB cluster](https://docs.yugabyte.com/latest/architecture/concepts/universe/).
+Sample command to setup single yb-master and single yb-tserver [YugaByte DB cluster](https://docs.yugabyte.com/latest/architecture/concepts/universe/) on a minikube setup.
 ```
 cd ~/code/yugabyte-db/cloud/kubernetes/helm/yugabyte
-helm install --name yb-iot --set resource.master.requests.cpu=0.8,resource.master.requests.memory=1Gi,resource.tserver.requests.cpu=0.8,resource.tserver.requests.memory=1Gi,replicas.master=1,replicas.tserver=1 .
+helm install --name yb-iot --set resource.master.requests.cpu=0.2,resource.master.requests.memory=1Gi,resource.tserver.requests.cpu=0.2,resource.tserver.requests.memory=1Gi,replicas.master=1,replicas.tserver=1 . --wait
 ```
+
+*Tip*: If running on GKE/PKS or other non-resource constrained environments, these values can be increased.
 
 These YugaByte pods should look like:
 ```
@@ -50,19 +56,11 @@ yb-master-0                                      1/1       Running            0 
 yb-tserver-0                                     1/1       Running            0          25m
 ```
 
-### Create YCQL tables
-The app uses Cassandra Query Language compatible [YCQL](https://docs.yugabyte.com/latest/api/cassandra/) to store the data in YugaByte DB. Run the script to create the tables using:
-
-```
-kubectl cp ~/code/yb-iot-fleet-management/resources/IoTData.cql yb-tserver-0:/home/yugabyte
-kubectl exec -it yb-tserver-0 /home/yugabyte/bin/cqlsh -- -f /home/yugabyte/IoTData.cql
-```
-
 ## Install Confluent Platform
 Based on [CP-Kafka](https://github.com/confluentinc/cp-helm-charts/tree/master/charts/cp-kafka), the following brings up only the components needed for the IoT App.
 ```
 cd ~/code/cp-helm-charts
-helm install --name kafka-demo --set cp-kafka-rest.enabled=false,cp-kafka-connect.enabled=false,cp-kafka.brokers=1,cp-zookeeper.servers=1,cp-kafka.configurationOverrides.offsets.topic.replication.factor=1 .
+helm install --name kafka-demo --set cp-kafka-rest.enabled=false,cp-kafka-connect.enabled=false,cp-kafka.brokers=1,cp-zookeeper.servers=1,cp-kafka.configurationOverrides.offsets.topic.replication.factor=1 . --wait
 ```
 
 *Note*: We bring up one broker for proof of concept purposes.
@@ -78,61 +76,45 @@ kafka-demo-cp-zookeeper-0                        2/2       Running            0 
 ...
 ```
 
+## Setup YugaByte Connect Sink dependencies
+The [YugaByte Connect Sink](https://github.com/YugaByte/yb-kafka-connector) related depedencies and properties files can be copied into the Kafka cluster using the following script:
+
+```
+cd ~/code/yb-iot-fleet-management/iot-ksql-processor/resources/kubernetes/
+./setup_yb_connect_sink.sh --kafka_helm_name kafka-demo
+```
+*Note*: If a name other than `kafka-demo` was used for Confluent platform, need to set the headless service info of the kafka brokers in the script and `resources/kubernetes` properties files.
+
+
+## Setup IoT App dependencies
+
+### Create YCQL tables
+The app uses Cassandra Query Language compatible [YCQL](https://docs.yugabyte.com/latest/api/cassandra/) to store the data in YugaByte DB. Run the script to create the tables using:
+
+```
+kubectl cp ~/code/yb-iot-fleet-management/resources/IoTData.cql yb-tserver-0:/home/yugabyte
+kubectl exec -it yb-tserver-0 /home/yugabyte/bin/cqlsh -- -f /home/yugabyte/IoTData.cql
+```
+
 ### Create origin topic
 Run the following to create the root topic that simulates a fleet of different types of vehicles on the move and sending their stream of information.
 ```
-$ kubectl exec -it kafka-demo-cp-kafka-0 -c cp-kafka-broker /usr/bin/kafka-topics -- --create --zookeeper kafka-demo-cp-zookeeper:2181 --replication-factor 1 --partitions 1 --topic iot-data-event
-Created topic "iot-data-event".
+kubectl exec -it kafka-demo-cp-kafka-0 -c cp-kafka-broker /usr/bin/kafka-topics -- --create --zookeeper kafka-demo-cp-zookeeper:2181 --replication-factor 1 --partitions 1 --topic iot-data-event
 ```
 This needs to be done only once per Kafka cluster.
 
-## Setup YugaByte Connect Sink dependencies
-The [YugaByte Connect Sink](https://github.com/YugaByte/yb-kafka-connector) related depedencies and properties files can be copied into the Kafka cluster using the following steps.
-
-First download the dependent jars
-```
-mkdir -p ~/kafka-connect-yugabyte/
-cd ~/kafka-connect-yugabyte/
-wget http://central.maven.org/maven2/io/netty/netty-all/4.1.25.Final/netty-all-4.1.25.Final.jar
-wget http://central.maven.org/maven2/com/yugabyte/cassandra-driver-core/3.2.0-yb-18/cassandra-driver-core-3.2.0-yb-18.jar
-wget http://central.maven.org/maven2/com/codahale/metrics/metrics-core/3.0.1/metrics-core-3.0.1.jar
-```
-
-Copy them into the kafka broker container
-```
-cd ~/kafka-connect-yugabyte/
-kubectl cp netty-all-4.1.25.Final.jar kafka-demo-cp-kafka-0:/usr/share/java/kafka -c cp-kafka-broker
-kubectl cp cassandra-driver-core-3.2.0-yb-18.jar kafka-demo-cp-kafka-0:/usr/share/java/kafka -c cp-kafka-broker
-kubectl cp metrics-core-3.0.1.jar kafka-demo-cp-kafka-0:/usr/share/java/kafka -c cp-kafka-broker
-```
-
-Build and copy the YugaByte Kafka sink connector jar to the kafka server.
-```
-cd ~/code/yb-kafka-connector
-mvn clean install -DskipTests
-kubectl cp target/yb-kafka-connnector-1.0.0.jar kafka-demo-cp-kafka-0:/usr/share/java/kafka -c cp-kafka-broker
-```
-
-Copy the property files needed to run the sink connector.
-
-*Note*: If a name different than `kafka-demo` was used, need to set the headless service info of the kafka brokers in these properties file.
-
-```
-cd ~/code/yb-iot-fleet-management/iot-ksql-processor/resources
-kubectl cp kubernetes/ kafka-demo-cp-kafka-0:/etc/kafka -c cp-kafka-broker
-```
 
 ### Setup the KSQL streams/tables
 
-First create the ksql cli client pod using the example in the `cp-helm-charts` repo
+First, create the ksql cli client pod using the example in the `cp-helm-charts` repo.
 
 *Note*: First, edit this file to have the current kafka container name: *bootstrap-server=kafka-demo-cp-kafka:9092*
 ```
 cd ~/code/cp-helm-charts/examples
-kubectl apply -f ksql-demo.yaml
+kubectl apply -f ksql-demo.yaml --wait
 ```
 
-Wait for that `ksql-demo` container to be in Running state, and then Copy the streams setup commands files to the container and create the KSQL streams/tables needed by the IoT App.
+Copy the stream setup commands files to the container and create the KSQL streams/tables needed by the IoT App.
 ```
 kubectl cp ~/code/yb-iot-fleet-management/iot-ksql-processor/setup_streams.ksql ksql-demo:/opt -c ksql
 
@@ -144,7 +126,7 @@ EOF
 
 ### Start the YugaByte Kafka Connect sink
 
-Run the connect script for the origin table to be saved. The TTL set on that table DDL will purge older data automatically.
+Run the connect script for the origin table to be saved. The TTL set on that orign table will purge older data automatically.
 ```
 kubectl exec -it kafka-demo-cp-kafka-0  -c cp-kafka-broker /usr/bin/connect-standalone -- /etc/kafka/kubernetes/kafka.connect.properties /etc/kafka/kubernetes/origin.sink.properties
 ```
@@ -168,7 +150,7 @@ yb-tservers                        ClusterIP      None           <none>         
 Using these as the endpoints for services to start the IoT app
 ```
 cd ~/code/yb-iot-fleet-management/kubernetes/helm
-helm install yb-iot-helm --name iot-demo --set kafkaHostPort=kafka-demo-cp-kafka-headless:9092,zookeeperHostPort=kafka-demo-cp-zookeeper-headless:2181,yugabyteDBHost=yb-tservers
+helm install yb-iot-helm --name iot-demo --set kafkaHostPort=kafka-demo-cp-kafka-headless:9092,zookeeperHostPort=kafka-demo-cp-zookeeper-headless:2181,yugabyteDBHost=yb-tservers --wait
 ```
 
 The pods for this app looks like
@@ -197,3 +179,5 @@ minikube service  iot-demo-yb-iot-helm  --url
 
 ## Next Steps:
 - Package yb-kafka-sink jars more cleanly to reduce steps.
+- Fork cp-helm-charts and add pre/post kubernetes hooks to ease yb sink connection setup into kafka broker.
+- Get YB sink into https://github.com/Landoop/kafka-helm-charts/tree/master/charts.
