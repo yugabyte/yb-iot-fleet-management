@@ -112,6 +112,7 @@ kubectl cp target/yb-kafka-connnector-1.0.0.jar kafka-demo-cp-kafka-0:/usr/share
 ```
 
 Copy the property files needed to run the sink connector.
+
 *Note*: If a name different than `kafka-demo` was used, need to set the headless service info of the kafka brokers in these properties file.
 
 ```
@@ -122,7 +123,8 @@ kubectl cp kubernetes/ kafka-demo-cp-kafka-0:/etc/kafka -c cp-kafka-broker
 ## Setup the KSQL streams/tables
 
 First create the ksql cli client pod using the example in the `cp-helm-charts` repo
-# NOTE: First, edit this file to have the current kafka container name: *bootstrap-server=kafka-demo-cp-kafka:9092*
+
+*Note*: First, edit this file to have the current kafka container name: *bootstrap-server=kafka-demo-cp-kafka:9092*
 ```
 cd ~/code/cp-helm-charts/examples
 kubectl apply -f ksql-demo.yaml
