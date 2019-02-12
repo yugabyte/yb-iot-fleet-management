@@ -42,8 +42,8 @@ Install a YugaByte DB cluster using [these instructions](https://docs.yugabyte.c
 
 Sample command to setup single yb-master and single yb-tserver [YugaByte DB cluster](https://docs.yugabyte.com/latest/architecture/concepts/universe/) on a minikube setup.
 ```
-cd ~/code/yugabyte-db/cloud/kubernetes/helm/yugabyte
-helm install --name yb-iot --set resource.master.requests.cpu=0.2,resource.master.requests.memory=1Gi,resource.tserver.requests.cpu=0.2,resource.tserver.requests.memory=1Gi,replicas.master=1,replicas.tserver=1 . --wait
+cd ~/code/yugabyte-db/cloud/kubernetes/helm/
+helm install --name yb-iot yugabyte --set resource.master.requests.cpu=0.2,resource.master.requests.memory=1Gi,resource.tserver.requests.cpu=0.2,resource.tserver.requests.memory=1Gi,replicas.master=1,replicas.tserver=1 --wait
 ```
 
 *Tip*: If running on GKE/PKS or other non-resource constrained environments, these values can be increased.
@@ -153,13 +153,13 @@ cd ~/code/yb-iot-fleet-management/kubernetes/helm
 helm install yb-iot-helm --name iot-demo --set kafkaHostPort=kafka-demo-cp-kafka-headless:9092,zookeeperHostPort=kafka-demo-cp-zookeeper-headless:2181,yugabyteDBHost=yb-tservers --wait
 ```
 
-The pods for this app looks like
+The pod for this app looks like
 ```
 NAME                                             READY     STATUS             RESTARTS   AGE
 iot-demo-yb-iot-helm-fb6b7db6f-rwskv             2/2       Running            0          46s
 ```
 
-This pods has two containers:
+This pod has two containers:
 - one ingests data into the origin topic of `iot-data-event`, which also get transformed into other streams/tables via KSQL.
 - other reads the tables from YugaByte DB and reports in the springboard based UI.
 
