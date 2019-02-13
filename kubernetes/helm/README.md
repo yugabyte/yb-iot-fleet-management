@@ -200,7 +200,7 @@ The `http://EXTERNAL-IP:7000/tablet-servers` page contains per server current re
 
 One can scale the database cluster to spread the load to account for ever growing data size with streaming apps. This command scales the database servers to 4 pods.
 ```
-~/code/yugabyte-db/cloud/kubernetes/helm
+cd ~/code/yugabyte-db/cloud/kubernetes/helm
 helm upgrade yb-iot yugabyte --set replicas.tserver=4 --wait
 ```
 The read and write load from the app is distributed to the new added pods as well.
