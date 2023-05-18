@@ -8,7 +8,7 @@ target
 /.settings
 /RUNNING_PID
 dependency-reduced-pom.xml
-
+.vscode
 # VIM/emacs stuff
 *.swp
 *~
@@ -22,4 +22,6 @@ app/.DS_STORE
 .DS_Store
 app/views/.DS_Store
 
+ybkeystore
+root.crt
 

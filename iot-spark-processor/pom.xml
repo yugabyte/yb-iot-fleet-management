@@ -10,29 +10,34 @@
 		<!-- Spark dependencies -->
 		<dependency>
 			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-core_2.10</artifactId>
-			<version>1.6.2</version>
+			<artifactId>spark-core_2.11</artifactId>
+			<version>1.6.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-streaming_2.10</artifactId>
-			<version>1.6.2</version>
+			<artifactId>spark-streaming_2.11</artifactId>
+			<version>1.6.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-streaming-kafka_2.10</artifactId>
-			<version>1.6.2</version>
+			<artifactId>spark-streaming-kafka_2.11</artifactId>
+			<version>1.6.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-sql_2.10</artifactId>
-			<version>1.6.2</version>
+			<artifactId>spark-sql_2.11</artifactId>
+			<version>1.6.3</version>
 		</dependency>
+		<dependency>
+      		<groupId>org.xerial.snappy</groupId>
+      		<artifactId>snappy-java</artifactId>
+      		<version>1.1.8.4</version>
+    	</dependency>
 		<!-- Spark cassandra -->
 		<dependency>
 			<groupId>com.datastax.spark</groupId>
-			<artifactId>spark-cassandra-connector_2.10</artifactId>
-			<version>1.6.0</version>
+			<artifactId>spark-cassandra-connector_2.11</artifactId>
+			<version>1.6.3</version>
 		</dependency>
 		<!-- other -->
 		<dependency>

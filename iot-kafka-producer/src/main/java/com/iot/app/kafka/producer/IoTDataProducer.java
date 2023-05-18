@@ -91,11 +91,14 @@ public class IoTDataProducer {
 				}
 			}
 			Collections.shuffle(eventList);// shuffle for random events
+			int i = 1;
 			for (IoTData event : eventList) {
 				event.setTimestamp(new Date());
 				KeyedMessage<String, IoTData> data = new KeyedMessage<String, IoTData>(topic, event);
+				logger.info("Sending event #" + i);
 				producer.send(data);
 				Thread.sleep(rand.nextInt(1000 - 500) + 500);//random delay of 0.5 to 1 second
+				i++;
 			}
 		}
 	}
