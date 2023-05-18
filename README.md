@@ -50,9 +50,9 @@ The IoT Fleet Management application contains the following four components:
 ## Prerequisites
 
 For building these projects it requires following tools. Please refer README.md files of individual projects for more details.
-- JDK - 1.8 +
+- JDK - 1.11 +
 - Maven - 3.3 +
-- Confluent Open Source - 5.0.0 (we assume this is installed in the `~/yb-kafka/confluent-os/confluent-5.0.0` directory).
+- Confluent Open Source - 7.4.0 (we assume this is installed in the `~/yb-kafka/confluent-os/confluent-7.4.0` directory).
 - YugaByte Connect sink - 1.0.0 (clone this into `~/yb-kafka/yb-kafka-connector`).
 
 ## Run using kubernetes
@@ -71,11 +71,11 @@ Refer [here](https://github.com/YugaByte/yb-iot-fleet-management/tree/master/kub
    ```
 
 3. Download Confluent Open Source from https://www.confluent.io/download/. This is a manual step, since an email id is needed to register (as of Nov 2018).
-   Unbundle the content of the tar.gz to location `~/yb-kafka/confluent-os/confluent-5.0.0` using these steps.
+   Unbundle the content of the tar.gz to location `~/yb-kafka/confluent-os/confluent-7.4.0` using these steps.
    ```
    mkdir -p ~/yb-kafka/confluent-os
    cd ~/yb-kafka/confluent-os
-   tar -xvf confluent-5.0.0-2.11.tar.gz
+   tar -xvf confluent-7.4.0-2.11.tar.gz
    ```
 
 4. Include dependent components into Kafka connectors:
@@ -85,19 +85,19 @@ Refer [here](https://github.com/YugaByte/yb-iot-fleet-management/tree/master/kub
     git clone https://github.com/YugaByte/yb-kafka-connector.git
     cd  ~/yb-kafka/yb-kafka-connector/
     mvn clean install -DskipTests
-    mkdir ~/yb-kafka/confluent-os/confluent-5.0.0/share/java/kafka-connect-yugabyte/
-    cp  ~/yb-kafka/yb-kafka-connector/target/yb-kafka-connnector-1.0.0.jar ~/yb-kafka/confluent-os/confluent-5.0.0/share/java/kafka-connect-yugabyte/
+    mkdir ~/yb-kafka/confluent-os/confluent-7.4.0/share/java/kafka-connect-yugabyte/
+    cp  ~/yb-kafka/yb-kafka-connector/target/yb-kafka-connnector-1.0.0.jar ~/yb-kafka/confluent-os/confluent-7.4.0/share/java/kafka-connect-yugabyte/
     ```
   - Setup the property files for use by Connect Sink.
     ```
     cd ~/yb-iot-fleet-management
-    cp iot-ksql-processor/resources/kafka.*connect.properties ~/yb-kafka/confluent-os/confluent-5.0.0/etc/kafka/
-    mkdir -p ~/yb-kafka/confluent-os/confluent-5.0.0/etc/kafka-connect-yugabyte
-    cp iot-ksql-processor/resources/*.sink.properties ~/yb-kafka/confluent-os/confluent-5.0.0/etc/kafka-connect-yugabyte
+    cp iot-ksql-processor/resources/kafka.*connect.properties ~/yb-kafka/confluent-os/confluent-7.4.0/etc/kafka/
+    mkdir -p ~/yb-kafka/confluent-os/confluent-7.4.0/etc/kafka-connect-yugabyte
+    cp iot-ksql-processor/resources/*.sink.properties ~/yb-kafka/confluent-os/confluent-7.4.0/etc/kafka-connect-yugabyte
     ```
   - Download the dependent jars from maven central repository using the following commands.
     ```
-    cd ~/yb-kafka/confluent-os/confluent-5.0.0/share/java/kafka-connect-yugabyte/
+    cd ~/yb-kafka/confluent-os/confluent-7.4.0/share/java/kafka-connect-yugabyte/
     wget http://central.maven.org/maven2/io/netty/netty-all/4.1.25.Final/netty-all-4.1.25.Final.jar
     wget http://central.maven.org/maven2/com/yugabyte/cassandra-driver-core/3.2.0-yb-18/cassandra-driver-core-3.2.0-yb-18.jar
     wget http://central.maven.org/maven2/com/codahale/metrics/metrics-core/3.0.1/metrics-core-3.0.1.jar
@@ -114,9 +114,8 @@ Refer [here](https://github.com/YugaByte/yb-iot-fleet-management/tree/master/kub
 
 5. Do the following to run Kafka and related components:
    ```
-   export PATH=$PATH:~/yb-kafka/confluent-os/confluent-5.0.0/bin
-   confluent start ksql-server
-   confluent status
+   export PATH=$PATH:~/yb-kafka/confluent-os/confluent-7.4.0/bin
+   confluent local services start
    ```
 
    The output for the `confluent status` should look like
@@ -133,7 +132,7 @@ Refer [here](https://github.com/YugaByte/yb-iot-fleet-management/tree/master/kub
 
 6. Create the origin Kafka topic
    ```
-    ~/yb-kafka/confluent-os/confluent-5.0.0/bin/kafka-topics --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic iot-data-event
+    ~/yb-kafka/confluent-os/confluent-7.4.0/bin/kafka-topics --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic iot-data-event
     ```
    *Note*: This is needed to be done only the first time.
 
@@ -148,7 +147,7 @@ Refer [here](https://github.com/YugaByte/yb-iot-fleet-management/tree/master/kub
 
 9. Run the origin topic YugaByte DB Connect Sink
    ```
-   cd ~/yb-kafka/confluent-os/confluent-5.0.0
+   cd ~/yb-kafka/confluent-os/confluent-7.4.0
    nohup ./bin/connect-standalone ./etc/kafka/kafka.connect.properties ./etc/kafka-connect-yugabyte/origin.sink.properties >& origin_sink.txt &
    ```
    This will insert the origin topic data into the YugaByte DB CQL table `TrafficKeySpace.Origin_Table`.
@@ -186,7 +185,7 @@ From the top level directory of this repo, run the following
       ```
     - Run the connect sink from KSQL processed data
       ```
-      cd ~/yb-kafka/confluent-os/confluent-5.0.0
+      cd ~/yb-kafka/confluent-os/confluent-7.4.0
       nohup ./bin/connect-standalone ./etc/kafka/kafka.ksql.connect.properties ./etc/kafka-connect-yugabyte/total_traffic.sink.properties ./etc/kafka-connect-yugabyte/window_traffic.sink.properties ./etc/kafka-connect-yugabyte/poi_traffic.sink.properties >& ksql_sink.txt &
       ```
 
