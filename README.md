@@ -53,16 +53,15 @@ For building these projects it requires following tools. Please refer README.md 
 - JDK - 1.11 +
 - Maven - 3.3 +
 - Confluent Open Source - 7.4.0 (we assume this is installed in the `~/yb-kafka/confluent-os/confluent-7.4.0` directory).
-- YugaByte Connect sink - 1.0.0 (clone this into `~/yb-kafka/yb-kafka-connector`).
 
 ## Run using kubernetes
 Refer [here](https://github.com/YugaByte/yb-iot-fleet-management/tree/master/kubernetes/helm) for the setup and run steps using a helm based kubernetes environment.
 
 ## Steps to setup local environment
 1. Clone this repository.
-  ```sh
-  git clone https://github.com/YugaByte/yb-iot-fleet-management.git ~
-  ```
+   ```sh
+   git clone https://github.com/YugaByte/yb-iot-fleet-management.git ~
+   ```
 
 2. Build the required binaries.
    ```sh
@@ -75,77 +74,47 @@ Refer [here](https://github.com/YugaByte/yb-iot-fleet-management/tree/master/kub
    ```
    mkdir -p ~/yb-kafka/confluent-os
    cd ~/yb-kafka/confluent-os
-   tar -xvf confluent-7.4.0-2.11.tar.gz
+   tar -xvf confluent-7.4.0.tar
    ```
 
-4. Include dependent components into Kafka connectors:
-  - Build the jar from this repo and copy it for use by Kafka:
-    ```
-    cd  ~/yb-kafka/
-    git clone https://github.com/YugaByte/yb-kafka-connector.git
-    cd  ~/yb-kafka/yb-kafka-connector/
-    mvn clean install -DskipTests
-    mkdir ~/yb-kafka/confluent-os/confluent-7.4.0/share/java/kafka-connect-yugabyte/
-    cp  ~/yb-kafka/yb-kafka-connector/target/yb-kafka-connnector-1.0.0.jar ~/yb-kafka/confluent-os/confluent-7.4.0/share/java/kafka-connect-yugabyte/
-    ```
-  - Setup the property files for use by Connect Sink.
-    ```
-    cd ~/yb-iot-fleet-management
-    cp iot-ksql-processor/resources/kafka.*connect.properties ~/yb-kafka/confluent-os/confluent-7.4.0/etc/kafka/
-    mkdir -p ~/yb-kafka/confluent-os/confluent-7.4.0/etc/kafka-connect-yugabyte
-    cp iot-ksql-processor/resources/*.sink.properties ~/yb-kafka/confluent-os/confluent-7.4.0/etc/kafka-connect-yugabyte
-    ```
-  - Download the dependent jars from maven central repository using the following commands.
-    ```
-    cd ~/yb-kafka/confluent-os/confluent-7.4.0/share/java/kafka-connect-yugabyte/
-    wget http://central.maven.org/maven2/io/netty/netty-all/4.1.25.Final/netty-all-4.1.25.Final.jar
-    wget http://central.maven.org/maven2/com/yugabyte/cassandra-driver-core/3.2.0-yb-18/cassandra-driver-core-3.2.0-yb-18.jar
-    wget http://central.maven.org/maven2/com/codahale/metrics/metrics-core/3.0.1/metrics-core-3.0.1.jar
-    ```
-
-    The final list of jars should look like this:
-    ```
-     $ ls -al
-      -rw-r--r--@    85449 Oct 27  2013 metrics-core-3.0.1.jar
-      -rw-r--r--@  3823147 Oct 27 15:18 netty-all-4.1.25.Final.jar
-      -rw-r--r--   1100520 Oct 29 11:18 cassandra-driver-core-3.2.0-yb-18.jar
-      -rw-r--r--     14934 Oct 29 11:19 yb-kafka-connnector-1.0.0.jar
-     ```
-
-5. Do the following to run Kafka and related components:
+4. Do the following to run Kafka and related components:
    ```
+   export CONFLUENT_HOME=$HOME/yb-kafka/confluent-os/confluent-7.4.0
    export PATH=$PATH:~/yb-kafka/confluent-os/confluent-7.4.0/bin
    confluent local services start
    ```
 
    The output for the `confluent status` should look like
    ```
-   control-center is [DOWN]
-   ksql-server is [UP]
-   connect is [DOWN]
-   kafka-rest is [DOWN]
-   schema-registry is [UP]
-   kafka is [UP]
-   zookeeper is [UP]
+    ZooKeeper is [UP]
+    Kafka is [UP]
+    Starting Schema Registry
+    Schema Registry is [UP]
+    Starting Kafka REST
+    Kafka REST is [UP]
+    Starting Connect
+    Connect is [UP]
+    Starting ksqlDB Server
+    ksqlDB Server is [UP]
+    Starting Control Center
+    Control Center is [UP]
    ```
-   *Note*: It is required that the `DOWN` components in this list are not actually enabled.
-
-6. Create the origin Kafka topic
+5. Create the origin Kafka topic
    ```
-    ~/yb-kafka/confluent-os/confluent-7.4.0/bin/kafka-topics --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic iot-data-event
+    kafka-topics --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic iot-data-event
     ```
    *Note*: This is needed to be done only the first time.
 
-7. Install YugaByte DB.
+6. Install YugaByte DB.
    - [Install YugaByte DB and start a local cluster](https://docs.yugabyte.com/quick-start/install/).
 
-8. Create the YugaByte DB tables
+7. Create the YugaByte DB tables
    - Create the keyspaces and tables by running the following command. You can find `cqlsh` in the `bin` sub-directory located inside the YugaByte installation folder.
      ```
      $> cqlsh -f resources/IoTData.cql
      ```
 
-9. Run the origin topic YugaByte DB Connect Sink
+8. Run the origin topic YugaByte DB Connect Sink
    ```
    cd ~/yb-kafka/confluent-os/confluent-7.4.0
    nohup ./bin/connect-standalone ./etc/kafka/kafka.connect.properties ./etc/kafka-connect-yugabyte/origin.sink.properties >& origin_sink.txt &
@@ -171,6 +140,14 @@ From the top level directory of this repo, run the following
 2. Start the data processing application
   Use either of these options:
   - Spark
+    - Set the following environment variables
+      - CASSANDRA_HOST
+      - CASSANDRA_PORT
+      - CASSANDRA_USERNAME
+      - CASSANDRA_PASSWORD
+      - CASSANDRA_SSL_ENABLED
+      - CASSANDRA_KEYSTORE (only if sslEnabled=true)
+      - CASSANDRA_KEYSTORE_PASSWORD (only if sslEnabled=true)
     - Run the spark app using this
       ```sh
       java -jar iot-spark-processor/target/iot-spark-processor-1.0.0.jar
@@ -190,9 +167,17 @@ From the top level directory of this repo, run the following
       ```
 
 3. Start the UI application.
-   ```sh
-   java -jar ~/yb-iot-fleet-management/iot-springboot-dashboard/target/iot-springboot-dashboard-1.0.0.jar
-   ```
+   - Set the following environment variables:
+     - CASSANDRA_HOST
+     - CASSANDRA_PORT
+     - CASSANDRA_USERNAME
+     - CASSANDRA_PASSWORD
+     - CASSANDRA_SSL_ENABLED
+     - CASSANDRA_SSL_CERTIFICATE (only if sslEnabled=true)
+   - Start the application
+     ```sh
+     java -jar ~/yb-iot-fleet-management/iot-springboot-dashboard/target/iot-springboot-dashboard-1.0.0.jar
+     ```
 
 4. Now open the dashboard UI in a web browser. The application will refresh itself periodically.
    ```

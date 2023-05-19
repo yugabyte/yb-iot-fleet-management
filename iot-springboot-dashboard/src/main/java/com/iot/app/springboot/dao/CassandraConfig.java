@@ -1,5 +1,6 @@
 package com.iot.app.springboot.dao;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.security.KeyStore;
 import java.security.cert.CertificateFactory;
@@ -20,7 +21,6 @@ import org.springframework.data.cassandra.mapping.BasicCassandraMappingContext;
 import org.springframework.data.cassandra.mapping.CassandraMappingContext;
 import org.springframework.data.cassandra.repository.config.EnableCassandraRepositories;
 
-import com.datastax.driver.core.AuthProvider;
 import com.datastax.driver.core.PlainTextAuthProvider;
 import com.datastax.driver.core.SSLOptions;
 
@@ -42,15 +42,14 @@ public class CassandraConfig extends AbstractCassandraConfiguration {
     public SSLContext createSSLHandler() {
         try {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            FileInputStream fis = new FileInputStream(environment.getProperty("com.iot.app.cassandra.certificate"));
+//            FileInputStream fis = new FileInputStream(environment.getProperty("com.iot.app.cassandra.certificate"));
+            ByteArrayInputStream is = new ByteArrayInputStream(environment.getProperty("com.iot.app.cassandra.certificate").getBytes());
             X509Certificate ca;
             try {
-                ca = (X509Certificate) cf.generateCertificate(fis);
+                ca = (X509Certificate) cf.generateCertificate(is);
             } catch (Exception e) {
-                System.err.println("Exception generating certificate from input file: " + e);
+                System.err.println("Exception generating certificate from string: " + e);
                 return null;
-            } finally {
-                fis.close();
             }
 
             // Create a KeyStore containing our trusted CAs
@@ -83,13 +82,7 @@ public class CassandraConfig extends AbstractCassandraConfiguration {
     public CassandraClusterFactoryBean cluster() {
         CassandraClusterFactoryBean cluster = new CassandraClusterFactoryBean();
         String cassandraHost = environment.getProperty("com.iot.app.cassandra.host");
-        if (System.getProperty("com.iot.app.cassandra.host") != null) {
-            cassandraHost = System.getProperty("com.iot.app.cassandra.host");
-        }
         String cassandraPort = environment.getProperty("com.iot.app.cassandra.port");
-        if (System.getProperty("com.iot.app.cassandra.port") != null) {
-            cassandraPort = System.getProperty("com.iot.app.cassandra.port");
-        }
         logger.info("Using cassandra host=" + cassandraHost + " port=" + cassandraPort);
         cluster.setContactPoints(cassandraHost);
         cluster.setPort(Integer.parseInt(cassandraPort));

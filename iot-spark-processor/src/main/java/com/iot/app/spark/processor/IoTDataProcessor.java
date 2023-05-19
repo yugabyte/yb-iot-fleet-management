@@ -45,12 +45,32 @@ public class IoTDataProcessor {
 		// read Spark and Cassandra properties and create SparkConf
 		Properties prop = PropertyFileReader.readPropertyFile();
 		String cassandraHost = prop.getProperty("com.iot.app.cassandra.host");
-		if (System.getProperty("com.iot.app.cassandra.host") != null) {
-			cassandraHost = System.getProperty("com.iot.app.cassandra.host");
+		if (System.getenv("CASSANDRA_HOST") != null) {
+			cassandraHost = System.getenv("CASSANDRA_HOST");
 		}
 		String cassandraPort = prop.getProperty("com.iot.app.cassandra.port");
-		if (System.getProperty("com.iot.app.cassandra.port") != null) {
-			cassandraPort = System.getProperty("com.iot.app.cassandra.port");
+		if (System.getenv("CASSANDRA_PORT") != null) {
+			cassandraPort = System.getenv("CASSANDRA_PORT");
+		}
+		String cassandraUsername = prop.getProperty("com.iot.app.cassandra.username");
+		if (System.getenv("CASSANDRA_USERNAME") != null) {
+			cassandraUsername = System.getenv("CASSANDRA_USERNAME");
+		}
+		String cassandraPassword = prop.getProperty("com.iot.app.cassandra.password");
+		if (System.getenv("CASSANDRA_PASSWORD") != null) {
+			cassandraPassword = System.getenv("CASSANDRA_PASSWORD");
+		}
+		String cassandraSslEnabled = prop.getProperty("com.iot.app.cassandra.sslEnabled");
+		if (System.getenv("CASSANDRA_SSL_ENABLED") != null) {
+			cassandraSslEnabled = System.getenv("CASSANDRA_SSL_ENABLED");
+		}
+		String cassandraKeystore = prop.getProperty("com.iot.app.cassandra.keystore");
+		if (System.getenv("CASSANDRA_KEYSTORE") != null) {
+			cassandraKeystore = System.getenv("CASSANDRA_KEYSTORE");
+		}
+		String cassandraKeystorePassword = prop.getProperty("com.iot.app.cassandra.keystorePassword");
+		if (System.getenv("CASSANDRA_KEYSTORE_PASSWORD") != null) {
+			cassandraKeystorePassword = System.getenv("CASSANDRA_PASSWORD");
 		}
 		SparkConf conf = new SparkConf()
 				.setAppName(prop.getProperty("com.iot.app.spark.app.name"))
@@ -58,16 +78,12 @@ public class IoTDataProcessor {
 				.set("spark.cassandra.connection.host", cassandraHost)
 				.set("spark.cassandra.connection.port", cassandraPort)
 				.set("spark.cassandra.connection.keep_alive_ms", prop.getProperty("com.iot.app.cassandra.keep_alive"))
-				.set("spark.cassandra.auth.username", prop.getProperty("com.iot.app.cassandra.username"))
-				.set("spark.cassandra.auth.password", prop.getProperty("com.iot.app.cassandra.password"));
-		Boolean sslEnabled = Boolean.parseBoolean(prop.getProperty("com.iot.app.cassandra.sslEnabled"));
-		if (sslEnabled) {
-			conf.set("spark.cassandra.connection.ssl.enabled", "true");
-					conf.set("spark.cassandra.connection.ssl.trustStore.path",
-							prop.getProperty("com.iot.app.cassandra.keystore"));
-					conf.set("spark.cassandra.connection.ssl.trustStore.password",
-							prop.getProperty("com.iot.app.cassandra.keystorePassword"));
-
+				.set("spark.cassandra.auth.username", cassandraUsername)
+				.set("spark.cassandra.auth.password", cassandraPassword);
+		if ("true".equalsIgnoreCase(cassandraSslEnabled)) {
+			conf.set("spark.cassandra.connection.ssl.enabled", cassandraSslEnabled);
+			conf.set("spark.cassandra.connection.ssl.trustStore.path", cassandraKeystore);
+			conf.set("spark.cassandra.connection.ssl.trustStore.password", cassandraKeystorePassword);
 		}
 
 		// batch interval of 5 seconds for incoming stream
