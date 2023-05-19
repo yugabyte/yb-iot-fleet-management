@@ -44,40 +44,40 @@ public class IoTDataProcessor {
 	public static void main(String[] args) throws Exception {
 		// read Spark and Cassandra properties and create SparkConf
 		Properties prop = PropertyFileReader.readPropertyFile();
-		String cassandraHost = prop.getProperty("com.iot.app.cassandra.host");
+		String cassandraHost = prop.getProperty("cassandra.host");
 		if (System.getenv("CASSANDRA_HOST") != null) {
 			cassandraHost = System.getenv("CASSANDRA_HOST");
 		}
-		String cassandraPort = prop.getProperty("com.iot.app.cassandra.port");
+		String cassandraPort = prop.getProperty("cassandra.port");
 		if (System.getenv("CASSANDRA_PORT") != null) {
 			cassandraPort = System.getenv("CASSANDRA_PORT");
 		}
-		String cassandraUsername = prop.getProperty("com.iot.app.cassandra.username");
+		String cassandraUsername = prop.getProperty("cassandra.username");
 		if (System.getenv("CASSANDRA_USERNAME") != null) {
 			cassandraUsername = System.getenv("CASSANDRA_USERNAME");
 		}
-		String cassandraPassword = prop.getProperty("com.iot.app.cassandra.password");
+		String cassandraPassword = prop.getProperty("cassandra.password");
 		if (System.getenv("CASSANDRA_PASSWORD") != null) {
 			cassandraPassword = System.getenv("CASSANDRA_PASSWORD");
 		}
-		String cassandraSslEnabled = prop.getProperty("com.iot.app.cassandra.sslEnabled");
+		String cassandraSslEnabled = prop.getProperty("cassandra.sslEnabled");
 		if (System.getenv("CASSANDRA_SSL_ENABLED") != null) {
 			cassandraSslEnabled = System.getenv("CASSANDRA_SSL_ENABLED");
 		}
-		String cassandraKeystore = prop.getProperty("com.iot.app.cassandra.keystore");
+		String cassandraKeystore = prop.getProperty("cassandra.keystore");
 		if (System.getenv("CASSANDRA_KEYSTORE") != null) {
 			cassandraKeystore = System.getenv("CASSANDRA_KEYSTORE");
 		}
-		String cassandraKeystorePassword = prop.getProperty("com.iot.app.cassandra.keystorePassword");
+		String cassandraKeystorePassword = prop.getProperty("cassandra.keystorePassword");
 		if (System.getenv("CASSANDRA_KEYSTORE_PASSWORD") != null) {
 			cassandraKeystorePassword = System.getenv("CASSANDRA_PASSWORD");
 		}
 		SparkConf conf = new SparkConf()
-				.setAppName(prop.getProperty("com.iot.app.spark.app.name"))
-				.setMaster(prop.getProperty("com.iot.app.spark.master"))
+				.setAppName(prop.getProperty("spark.app.name"))
+				.setMaster(prop.getProperty("spark.master"))
 				.set("spark.cassandra.connection.host", cassandraHost)
 				.set("spark.cassandra.connection.port", cassandraPort)
-				.set("spark.cassandra.connection.keep_alive_ms", prop.getProperty("com.iot.app.cassandra.keep_alive"))
+				.set("spark.cassandra.connection.keep_alive_ms", prop.getProperty("cassandra.keep_alive"))
 				.set("spark.cassandra.auth.username", cassandraUsername)
 				.set("spark.cassandra.auth.password", cassandraPassword);
 		if ("true".equalsIgnoreCase(cassandraSslEnabled)) {
@@ -89,13 +89,13 @@ public class IoTDataProcessor {
 		// batch interval of 5 seconds for incoming stream
 		JavaStreamingContext jssc = new JavaStreamingContext(conf, Durations.seconds(5));
 		// add check point directory
-		jssc.checkpoint(prop.getProperty("com.iot.app.spark.checkpoint.dir"));
+		jssc.checkpoint(prop.getProperty("spark.checkpoint.dir"));
 
 		// read and set Kafka properties
 		Map<String, String> kafkaParams = new HashMap<String, String>();
-		kafkaParams.put("zookeeper.connect", prop.getProperty("com.iot.app.kafka.zookeeper"));
-		kafkaParams.put("metadata.broker.list", prop.getProperty("com.iot.app.kafka.brokerlist"));
-		String topic = prop.getProperty("com.iot.app.kafka.topic");
+		kafkaParams.put("zookeeper.connect", prop.getProperty("kafka.zookeeper"));
+		kafkaParams.put("metadata.broker.list", prop.getProperty("kafka.brokerlist"));
+		String topic = prop.getProperty("kafka.topic");
 		Set<String> topicsSet = new HashSet<String>();
 		topicsSet.add(topic);
 		// create direct kafka stream

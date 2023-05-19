@@ -1,7 +1,6 @@
 package com.iot.app.springboot.dao;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
 import java.security.KeyStore;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -34,15 +33,16 @@ import com.datastax.driver.core.SSLOptions;
 @PropertySource(value = { "classpath:iot-springboot.properties" })
 @EnableCassandraRepositories(basePackages = { "com.iot.app.springboot.dao" })
 public class CassandraConfig extends AbstractCassandraConfiguration {
+    
     private static final Logger logger = Logger.getLogger(CassandraConfig.class);
 
     @Autowired
     private Environment environment;
 
-    public SSLContext createSSLHandler() {
+    private SSLContext createSSLHandler() {
         try {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            ByteArrayInputStream is = new ByteArrayInputStream(environment.getProperty("com.iot.app.cassandra.certificate").getBytes());
+            ByteArrayInputStream is = new ByteArrayInputStream(environment.getProperty("cassandra.certificate").getBytes());
             X509Certificate ca;
             try {
                 ca = (X509Certificate) cf.generateCertificate(is);
@@ -71,8 +71,7 @@ public class CassandraConfig extends AbstractCassandraConfiguration {
         }
     }
 
-    @Bean
-    public SSLOptions sslOptions() {
+    private SSLOptions sslOptions() {
         SSLOptions sslOptions = new SSLOptions(createSSLHandler(), SSLOptions.DEFAULT_SSL_CIPHER_SUITES);
         return sslOptions;
     }
@@ -80,18 +79,16 @@ public class CassandraConfig extends AbstractCassandraConfiguration {
     @Bean
     public CassandraClusterFactoryBean cluster() {
         CassandraClusterFactoryBean cluster = new CassandraClusterFactoryBean();
-        String cassandraHost = environment.getProperty("com.iot.app.cassandra.host");
-        String cassandraPort = environment.getProperty("com.iot.app.cassandra.port");
+        String cassandraHost = environment.getProperty("cassandra.host");
+        String cassandraPort = environment.getProperty("cassandra.port");
         logger.info("Using cassandra host=" + cassandraHost + " port=" + cassandraPort);
         cluster.setContactPoints(cassandraHost);
         cluster.setPort(Integer.parseInt(cassandraPort));
-        cluster.setUsername(environment.getProperty("com.iot.app.cassandra.username"));
-        cluster.setPassword(environment.getProperty("com.iot.app.cassandra.password"));
         PlainTextAuthProvider authProvider = new PlainTextAuthProvider(
-                environment.getProperty("com.iot.app.cassandra.username"),
-                environment.getProperty("com.iot.app.cassandra.password"));
+                environment.getProperty("cassandra.username"),
+                environment.getProperty("cassandra.password"));
         cluster.setAuthProvider(authProvider);
-        cluster.setSslEnabled(Boolean.parseBoolean(environment.getProperty("com.iot.app.cassandra.sslEnabled")));
+        cluster.setSslEnabled(Boolean.parseBoolean(environment.getProperty("cassandra.sslEnabled")));
         cluster.setSslOptions(sslOptions());
         return cluster;
     }
@@ -104,6 +101,6 @@ public class CassandraConfig extends AbstractCassandraConfiguration {
     @Override
     @Bean
     protected String getKeyspaceName() {
-        return environment.getProperty("com.iot.app.cassandra.keyspace");
+        return environment.getProperty("cassandra.keyspace");
     }
 }
