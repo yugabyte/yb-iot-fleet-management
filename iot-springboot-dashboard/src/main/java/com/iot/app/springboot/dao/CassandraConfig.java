@@ -42,7 +42,6 @@ public class CassandraConfig extends AbstractCassandraConfiguration {
     public SSLContext createSSLHandler() {
         try {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
-//            FileInputStream fis = new FileInputStream(environment.getProperty("com.iot.app.cassandra.certificate"));
             ByteArrayInputStream is = new ByteArrayInputStream(environment.getProperty("com.iot.app.cassandra.certificate").getBytes());
             X509Certificate ca;
             try {
