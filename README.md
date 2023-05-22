@@ -52,7 +52,7 @@ The IoT Fleet Management application contains the following four components:
 For building these projects it requires following tools. Please refer README.md files of individual projects for more details.
 - JDK - 1.11 +
 - Maven - 3.3 +
-- Confluent Open Source - 7.4.0 (we assume this is installed in the `~/yb-kafka/confluent-os/confluent-7.4.0` directory).
+- Confluent Open Source - 7.4.0 (we assume this is installed in the `$HOME/yb-kafka/confluent-os/confluent-7.4.0` directory).
 
 ## Run using kubernetes
 Refer [here](https://github.com/YugaByte/yb-iot-fleet-management/tree/master/kubernetes/helm) for the setup and run steps using a helm based kubernetes environment.
@@ -80,7 +80,7 @@ Refer [here](https://github.com/YugaByte/yb-iot-fleet-management/tree/master/kub
 4. Do the following to run Kafka and related components:
    ```
    export CONFLUENT_HOME=$HOME/yb-kafka/confluent-os/confluent-7.4.0
-   export PATH=$PATH:~/yb-kafka/confluent-os/confluent-7.4.0/bin
+   export PATH=$PATH:$HOME/yb-kafka/confluent-os/confluent-7.4.0/bin
    confluent local services start
    ```
 
@@ -115,6 +115,9 @@ Refer [here](https://github.com/YugaByte/yb-iot-fleet-management/tree/master/kub
      ```
 
 8. Run the origin topic YugaByte DB Connect Sink
+
+   ***Currently this isn't needed, so this step can be skipped***
+
    ```
    cd ~/yb-kafka/confluent-os/confluent-7.4.0
    nohup ./bin/connect-standalone ./etc/kafka/kafka.connect.properties ./etc/kafka-connect-yugabyte/origin.sink.properties >& origin_sink.txt &
@@ -140,7 +143,7 @@ From the top level directory of this repo, run the following
 2. Start the data processing application
   Use either of these options:
   - Spark
-    - Set the following environment variables
+    - Set the following environment variables (note that you will need to create a Java keystore with the certificate if using SSL)
       - CASSANDRA_HOST
       - CASSANDRA_PORT
       - CASSANDRA_USERNAME
@@ -152,6 +155,9 @@ From the top level directory of this repo, run the following
       ```sh
       java -jar iot-spark-processor/target/iot-spark-processor-1.0.0.jar
       ```
+
+  ***KSQL hasn't been revived and tested; Spark should used for data processing***
+
   - KSQL
     - Setup the KSQL tables/streams
       ```
@@ -173,7 +179,7 @@ From the top level directory of this repo, run the following
      - CASSANDRA_USERNAME
      - CASSANDRA_PASSWORD
      - CASSANDRA_SSL_ENABLED
-     - CASSANDRA_SSL_CERTIFICATE (only if sslEnabled=true)
+     - CASSANDRA_SSL_CERTIFICATE (only if sslEnabled=true) _<- Use the certicate inline, enclosed by quotes_
    - Start the application
      ```sh
      java -jar ~/yb-iot-fleet-management/iot-springboot-dashboard/target/iot-springboot-dashboard-1.0.0.jar
