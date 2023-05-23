@@ -1,0 +1,83 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="" />
+    <meta name="theme-color" content="#7952b3" />
+    <title>IoT Event Producer</title>
+
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/application.css" rel="stylesheet" />
+    <link rel="icon" href="/images/favicon-64.png" />
+
+</head>
+
+<body>
+    <div class="col-lg-8 mx-auto p-3 py-md-5">
+        <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom">
+            <a href="/"
+                class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
+                <img src="/images/command-line.png" width="120" />
+                <div class="fs-1 text-dark">IoT Event Producer</div>
+            </a>
+        </header>
+
+        <main>
+            <div class="container">
+                <div class="fs-4" th:if="${!isRunning}">
+                    Start the event producer
+                </div>
+                <div class="fs-4" th:if="${isRunning}">
+                    Stop the event producer
+                </div>
+                <div class="row pt-8">
+                    <div th:if="${!isRunning}">
+                        <form method="post" th:action="@{/start}" id="startForm">
+                            <div class="pt-5">
+                                <button type="submit" class="btn btn-success btn-block px-4" id="startButton">
+                                    Start Event Producer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div th:if="${isRunning}">
+                        <form method="post" th:action="@{/stop}" id="stopForm">
+                            <div class="pt-5">
+                                <button type="submit" class="btn btn-warning btn-block px-4" id="stopButton">
+                                    Stop Event Producer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="row pt-8" th:if="${result}">
+                    <div class="row pt-5">
+                        <div class="highlight">
+                            <span th:text="${result}"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="pt-5 my-5 text-muted border-top">
+            Yugabyte &middot; &copy; 2023
+        </footer>
+    </div>
+
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script>
+
+        function showSpinner() {
+            document.getElementById("spinner").style.display = "";
+            document.getElementById("commandButton").disabled = true;
+            document.getElementById("commandForm").submit();
+        }
+
+    </script>
+
+</body>
+
+</html>

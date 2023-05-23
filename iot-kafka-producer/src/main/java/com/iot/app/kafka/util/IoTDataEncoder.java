@@ -1,6 +1,7 @@
 package com.iot.app.kafka.util;
 
-import org.apache.log4j.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,7 +18,7 @@ import kafka.utils.VerifiableProperties;
  */
 public class IoTDataEncoder implements Encoder<IoTData> {
 	
-	private static final Logger logger = Logger.getLogger(IoTDataEncoder.class);	
+	private static final Log LOG = LogFactory.getLog(IoTDataEncoder.class);	
 	private static ObjectMapper objectMapper = new ObjectMapper();		
 	public IoTDataEncoder(VerifiableProperties verifiableProperties) {
 
@@ -25,10 +26,10 @@ public class IoTDataEncoder implements Encoder<IoTData> {
 	public byte[] toBytes(IoTData iotEvent) {
 		try {
 			String msg = objectMapper.writeValueAsString(iotEvent);
-			logger.info(msg);
+			LOG.info(msg);
 			return msg.getBytes();
 		} catch (JsonProcessingException e) {
-			logger.error("Error in Serialization", e);
+			LOG.error("Error in Serialization", e);
 		}
 		return null;
 	}

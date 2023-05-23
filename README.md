@@ -127,18 +127,20 @@ Refer [here](https://github.com/YugaByte/yb-iot-fleet-management/tree/master/kub
 ## Running the application
 From the top level directory of this repo, run the following
 
-1. Start the data producer.
+1. Start and launch the data producer.
    ```sh
    cd ~/yb-iot-fleet-management
    java -jar iot-kafka-producer/target/iot-kafka-producer-1.0.0.jar
    ```
 
-   It should start emitting data points to the Kafka topic. You should see something like the following as the output on the console:
+   Open a browser and goto `http://<hostname>:9080`, and then click 'Start Event Producer'. It should start emitting data points to the Kafka topic. You should see something like the following as the output on the console:
    ```
    2017-10-16 12:31:52 INFO  IoTDataEncoder:28 - {"vehicleId":"0bf45cac-d1b8-4364-a906-980e1c2bdbcb","vehicleType":"Taxi","routeId":"Route-37","longitude":"-95.255615","latitude":"33.49808","timestamp":"2017-10-16 12:31:03","speed":49.0,"fuelLevel":38.0}
 
    2017-10-16 12:31:53 INFO  IoTDataEncoder:28 - {"vehicleId":"600863bc-c918-4c8e-a90b-7d66db4958e0","vehicleType":"18 Wheeler","routeId":"Route-43","longitude":"-97.918175","latitude":"35.78791","timestamp":"2017-10-16 12:31:03","speed":59.0,"fuelLevel":12.0}
    ```
+
+   To stop sending data to the topic, click 'Stop Event Producer' in the web page.
 
 2. Start the data processing application
   Use either of these options:
