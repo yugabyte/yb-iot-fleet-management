@@ -1,6 +1,4 @@
-package com.iot.app.kafka.controller;
-
-import java.lang.Thread.State;
+package com.iot.app.kafka.producer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -9,9 +7,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
-
-import com.iot.app.kafka.util.EventGenerator;
 
 @Controller
 public class KafkaProducerController {

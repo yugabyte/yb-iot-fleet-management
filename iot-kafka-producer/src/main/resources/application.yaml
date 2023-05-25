@@ -1,2 +1,8 @@
 server:
   port: 9080
+kafka:
+  topic: iot-data-event
+spring:
+  kafka:
+    producer:
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer

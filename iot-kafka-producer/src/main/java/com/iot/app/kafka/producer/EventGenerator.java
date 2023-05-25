@@ -1,4 +1,4 @@
-package com.iot.app.kafka.util;
+package com.iot.app.kafka.producer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,11 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import com.iot.app.kafka.vo.IoTData;
-
-import kafka.javaapi.producer.Producer;
-import kafka.producer.KeyedMessage;
+import org.springframework.kafka.core.KafkaTemplate;
 
 public class EventGenerator implements Runnable {
 
@@ -25,7 +21,10 @@ public class EventGenerator implements Runnable {
 	private Thread worker;
 
 	@Autowired
-	Producer<String, IoTData> producer;
+	KafkaTemplate<String, IoTData> kafkaTemplate;
+
+	//@Autowired
+	//Producer<String, IoTData> producer;
 
 	@Autowired
 	String topicName;
@@ -85,8 +84,8 @@ public class EventGenerator implements Runnable {
 				if (!isRunning())
 					break;
 				event.setTimestamp(new Date());
-				KeyedMessage<String, IoTData> data = new KeyedMessage<String, IoTData>(topicName, event);
-				producer.send(data);
+				LOG.info(String.format("Sending event: {%s}", event));
+				kafkaTemplate.send(topicName, event);
 				try {
 					Thread.sleep(rand.nextInt(1000 - 500) + 500);
 				} catch (InterruptedException e) {

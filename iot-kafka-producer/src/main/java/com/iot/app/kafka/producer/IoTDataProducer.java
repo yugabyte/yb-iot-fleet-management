@@ -1,20 +1,13 @@
 package com.iot.app.kafka.producer;
 
-import java.util.Collections;
-import java.util.Properties;
-
-import org.apache.log4j.Logger;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
-
-import com.iot.app.kafka.util.EventGenerator;
-import com.iot.app.kafka.util.PropertyFileReader;
-import com.iot.app.kafka.vo.IoTData;
-
-import kafka.javaapi.producer.Producer;
-import kafka.producer.ProducerConfig;
+import org.springframework.kafka.support.converter.JsonMessageConverter;
+import org.springframework.kafka.support.converter.RecordMessageConverter;
 
 /**
  * IoT data event producer class which uses Kafka producer for events. 
@@ -23,8 +16,11 @@ import kafka.producer.ProducerConfig;
  *
  */
 @SpringBootApplication
-@ComponentScan(basePackages={"com.iot.app.kafka.controller", "com.iot.app.kafka.util"})
+@ComponentScan(basePackages={"com.iot.app.kafka.producer"})
 public class IoTDataProducer {
+
+	@Autowired
+	KafkaConfiguration kafkaConfiguration;
 
 	public static void main(String[] args) throws Exception {
 		SpringApplication.run(IoTDataProducer.class, args);
@@ -32,43 +28,17 @@ public class IoTDataProducer {
 
 	@Bean
 	public String topicName() {
-		Properties prop = null;
-		try {
-			prop = PropertyFileReader.readPropertyFile();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return prop.getProperty("com.iot.app.kafka.topic");
+		return kafkaConfiguration.getTopic();
 	}
 
 	@Bean
-	public Producer<String, IoTData> producer() {
-		//read config file
-		Properties prop = null;
-		try {
-			prop = PropertyFileReader.readPropertyFile();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}		
-		String zookeeper = prop.getProperty("com.iot.app.kafka.zookeeper");
-		if (System.getProperty("com.iot.app.kafka.zookeeper") != null) {
-					zookeeper = System.getProperty("com.iot.app.kafka.zookeeper");
-		}
-		String brokerList = prop.getProperty("com.iot.app.kafka.brokerlist");
-		if (System.getProperty("com.iot.app.kafka.brokerlist") != null) {
-					brokerList  = System.getProperty("com.iot.app.kafka.brokerlist");
-		}
+	public NewTopic topic() {
+		return new NewTopic(kafkaConfiguration.getTopic(), 1, (short) 1); 
+	}
 
-		// set producer properties
-		Properties properties = new Properties();
-		properties.put("zookeeper.connect", zookeeper);
-		properties.put("metadata.broker.list", brokerList);
-		properties.put("request.required.acks", "1");
-		properties.put("serializer.class", "com.iot.app.kafka.util.IoTDataEncoder");
-		Producer<String, IoTData> producer = new Producer<String, IoTData>(new ProducerConfig(properties));
-
-		return producer;
-		
+	@Bean
+	public RecordMessageConverter converter() {
+		return new JsonMessageConverter();
 	}
 
 	@Bean

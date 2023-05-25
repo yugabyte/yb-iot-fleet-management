@@ -1,4 +1,4 @@
-package com.iot.app.kafka.vo;
+package com.iot.app.kafka.producer;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -11,22 +11,22 @@ import com.fasterxml.jackson.annotation.JsonFormat;
  * @author abaghel
  *
  */
-public class IoTData implements Serializable{
-	
+public class IoTData implements Serializable {
+
 	private String vehicleId;
 	private String vehicleType;
 	private String routeId;
 	private String longitude;
 	private String latitude;
-	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone="MST")
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "MST")
 	private Date timestamp;
 	private double speed;
 	private double fuelLevel;
-	
-	public IoTData(){
-		
+
+	public IoTData() {
+
 	}
-	
+
 	public IoTData(String vehicleId, String vehicleType, String routeId, String latitude, String longitude,
 			Date timestamp, double speed, double fuelLevel) {
 		super();
@@ -74,6 +74,13 @@ public class IoTData implements Serializable{
 
 	public double getFuelLevel() {
 		return fuelLevel;
+	}
+
+	@Override
+	public String toString() {
+		return "IoTData [vehicleId=" + vehicleId + ", vehicleType=" + vehicleType + ", routeId=" + routeId
+				+ ", longitude=" + longitude + ", latitude=" + latitude + ", timestamp=" + timestamp + ", speed="
+				+ speed + ", fuelLevel=" + fuelLevel + "]";
 	}
 
 }
