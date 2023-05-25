@@ -1,13 +1,13 @@
 package com.iot.app.kafka.producer;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConfigurationProperties(prefix = "kafka")
 public class KafkaConfiguration {
 
-	private String topic;
+	@Value("kafka.topic")
+	String topic;
 
 	public String getTopic() {
 		return topic;
