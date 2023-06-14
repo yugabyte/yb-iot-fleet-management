@@ -1,7 +1,6 @@
 package com.iot.app.springboot.dao;
 
 import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.security.KeyStore;
 import java.security.cert.CertificateFactory;
