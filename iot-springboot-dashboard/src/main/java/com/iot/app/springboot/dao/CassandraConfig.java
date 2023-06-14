@@ -1,6 +1,8 @@
 package com.iot.app.springboot.dao;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 import java.security.KeyStore;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -42,10 +44,11 @@ public class CassandraConfig extends AbstractCassandraConfiguration {
     private SSLContext createSSLHandler() {
         try {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            ByteArrayInputStream is = new ByteArrayInputStream(environment.getProperty("cassandra.certificate").getBytes());
+            FileInputStream fis = new FileInputStream(environment.getProperty("cassandra.certificate"));
+            BufferedInputStream bis = new BufferedInputStream(fis);
             X509Certificate ca;
             try {
-                ca = (X509Certificate) cf.generateCertificate(is);
+                ca = (X509Certificate) cf.generateCertificate(bis);
             } catch (Exception e) {
                 System.err.println("Exception generating certificate from string: " + e);
                 return null;
