@@ -70,7 +70,7 @@ public class IoTDataProcessor {
 		}
 		String cassandraKeystorePassword = prop.getProperty("cassandra.keystorePassword");
 		if (System.getenv("CASSANDRA_KEYSTORE_PASSWORD") != null) {
-			cassandraKeystorePassword = System.getenv("CASSANDRA_PASSWORD");
+			cassandraKeystorePassword = System.getenv("CASSANDRA_KEYSTORE_PASSWORD");
 		}
 		SparkConf conf = new SparkConf()
 				.setAppName(prop.getProperty("spark.app.name"))
