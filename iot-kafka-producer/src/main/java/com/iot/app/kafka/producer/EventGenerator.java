@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 
 public class EventGenerator implements Runnable {
@@ -26,7 +27,7 @@ public class EventGenerator implements Runnable {
 	//@Autowired
 	//Producer<String, IoTData> producer;
 
-	@Autowired
+	@Value("${kafka.topic}")
 	String topicName;
 
 	private AtomicBoolean running = new AtomicBoolean(false);
