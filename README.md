@@ -181,7 +181,7 @@ From the top level directory of this repo, run the following
      - CASSANDRA_USERNAME
      - CASSANDRA_PASSWORD
      - CASSANDRA_SSL_ENABLED
-     - CASSANDRA_SSL_CERTIFICATE (only if sslEnabled=true) _<- Use the certicate inline, enclosed by quotes_
+     - CASSANDRA_SSL_CERTIFICATE (only if sslEnabled=true) _This should be the path to the certificate file_
    - Start the application
      ```sh
      java -jar ~/yb-iot-fleet-management/iot-springboot-dashboard/target/iot-springboot-dashboard-1.0.0.jar
