@@ -12,7 +12,7 @@ Assume that a fleet management company wants to track their fleet of vehicles, w
 
 Below is a view of the dashboard of the running app.
 
-![IoT Fleet Management Dashboard](https://github.com/YugaByte/yb-iot-fleet-management/blob/master/yb-iot-fleet-management-screenshot.png)
+![IoT Fleet Management Dashboard](./images/yb-iot-fleet-management-screenshot.png)
 
 The above dashboard can be used to monitor the different vehicle types and the routes they have taken both over the lifetime of the app as well as over the last 30 second window. It also points out the trucks that are near road closures, which might cause a delay in the shipping schedule.
 
@@ -41,16 +41,13 @@ The IoT Fleet Management application contains the following four components:
 - IoT Spring Boot Dashboard
   This app uses the Java Spring Boot framework with its integration for Cassandra as the data layer, using the Cassandra Query Language (CQL) internally.
 
-### Architecture with KSQL
-![Architecture with KSQL](https://github.com/YugaByte/yb-iot-fleet-management/blob/master/yb-iot-fleet-mgmt-ksql-arch.png)
-
 ### Architecture with Apache Spark Streaming
-![Architecture with Apache Spark Streaming](https://github.com/YugaByte/yb-iot-fleet-management/blob/master/yb-iot-fleet-mgmt-spark-arch.png)
+![Architecture with Apache Spark Streaming](./images/yb-iot-fleet-mgmt-spark-arch.png)
 
 ## Prerequisites
 
 For building these projects it requires following tools. Please refer README.md files of individual projects for more details.
-- JDK - 1.11 +
+- JDK - 1.8.x
 - Maven - 3.3 +
 - Confluent Open Source - 7.4.0 (we assume this is installed in the `$HOME/yb-kafka/confluent-os/confluent-7.4.0` directory).
 
@@ -59,81 +56,61 @@ Refer [here](https://github.com/YugaByte/yb-iot-fleet-management/tree/master/kub
 
 ## Steps to setup local environment
 1. Clone this repository.
-   ```sh
-   git clone https://github.com/YugaByte/yb-iot-fleet-management.git ~
+   ```bash
+   git clone https://github.com/btjimerson/yb-iot-fleet-management.git
    ```
 
-2. Build the required binaries.
-   ```sh
-   cd ~/yb-iot-fleet-management
-   mvn package
-   ```
-
-3. Download Confluent Open Source from https://www.confluent.io/download/. This is a manual step, since an email id is needed to register (as of Nov 2018).
-   Unbundle the content of the tar.gz to location `~/yb-kafka/confluent-os/confluent-7.4.0` using these steps.
+2. Download Confluent Open Source from https://www.confluent.io/download/. This is a manual step, since an email id is needed to register.
+   Unbundle the content of the tarball to location `~/yb-kafka/confluent-os/confluent-7.4.0` using these steps.
    ```
    mkdir -p ~/yb-kafka/confluent-os
    cd ~/yb-kafka/confluent-os
    tar -xvf confluent-7.4.0.tar
    ```
 
-4. Do the following to run Kafka and related components:
+3. Start Kafka and related components.
    ```
    export CONFLUENT_HOME=$HOME/yb-kafka/confluent-os/confluent-7.4.0
    export PATH=$PATH:$HOME/yb-kafka/confluent-os/confluent-7.4.0/bin
    confluent local services start
    ```
 
-   The output for the `confluent status` should look like
+   The output for the `confluent status` should look like this:
    ```
-    ZooKeeper is [UP]
-    Kafka is [UP]
-    Starting Schema Registry
-    Schema Registry is [UP]
-    Starting Kafka REST
-    Kafka REST is [UP]
-    Starting Connect
-    Connect is [UP]
-    Starting ksqlDB Server
-    ksqlDB Server is [UP]
-    Starting Control Center
-    Control Center is [UP]
+   ZooKeeper is [UP]
+   Kafka is [UP]
+   Starting Schema Registry
+   Schema Registry is [UP]
+   Starting Kafka REST
+   Kafka REST is [UP]
+   Starting Connect
+   Connect is [UP]
+   Starting ksqlDB Server
+   ksqlDB Server is [UP]
+   Starting Control Center
+   Control Center is [UP]
    ```
-5. Create the origin Kafka topic
+4. Install YugaByte DB.
+   
+   [Install YugaByte DB and start a local cluster](https://docs.yugabyte.com/quick-start/install/).
+
+5. Create the YugaByte DB tables
+   
+   Create the keyspaces and tables by running the following command. You can find `cqlsh` in the `bin` sub-directory located inside the YugaByte installation folder.
    ```
-    kafka-topics --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic iot-data-event
-    ```
-   *Note*: This is needed to be done only the first time.
-
-6. Install YugaByte DB.
-   - [Install YugaByte DB and start a local cluster](https://docs.yugabyte.com/quick-start/install/).
-
-7. Create the YugaByte DB tables
-   - Create the keyspaces and tables by running the following command. You can find `cqlsh` in the `bin` sub-directory located inside the YugaByte installation folder.
-     ```
-     $> cqlsh -f resources/IoTData.cql
-     ```
-
-8. Run the origin topic YugaByte DB Connect Sink
-
-   ***Currently this isn't needed, so this step can be skipped***
-
+   cqlsh -f resources/IoTData.cql
    ```
-   cd ~/yb-kafka/confluent-os/confluent-7.4.0
-   nohup ./bin/connect-standalone ./etc/kafka/kafka.connect.properties ./etc/kafka-connect-yugabyte/origin.sink.properties >& origin_sink.txt &
-   ```
-   This will insert the origin topic data into the YugaByte DB CQL table `TrafficKeySpace.Origin_Table`.
 
 ## Running the application
-From the top level directory of this repo, run the following
+
+There are sample scripts in the [bin](./bin/README.md) directory that you can use to run the application. Alternatively, do the following from the root of this repository:
 
 1. Start and launch the data producer.
-   ```sh
-   cd ~/yb-iot-fleet-management
-   java -jar iot-kafka-producer/target/iot-kafka-producer-1.0.0.jar
+   ```bash
+   mvn clean package spring-boot:run -f iot-kafka-producer
    ```
 
-   Open a browser and goto `http://<hostname>:9080`, and then click 'Start Event Producer'. It should start emitting data points to the Kafka topic. You should see something like the following as the output on the console:
+   Open a browser and go to `http://localhost:9080`, and then click 'Start Event Producer'. It should start emitting data points to the Kafka topic. You should see something like the following as the output on the console:
    ```
    2017-10-16 12:31:52 INFO  IoTDataEncoder:28 - {"vehicleId":"0bf45cac-d1b8-4364-a906-980e1c2bdbcb","vehicleType":"Taxi","routeId":"Route-37","longitude":"-95.255615","latitude":"33.49808","timestamp":"2017-10-16 12:31:03","speed":49.0,"fuelLevel":38.0}
 
@@ -143,51 +120,43 @@ From the top level directory of this repo, run the following
    To stop sending data to the topic, click 'Stop Event Producer' in the web page.
 
 2. Start the data processing application
-  Use either of these options:
-  - Spark
-    - Set the following environment variables (note that you will need to create a Java keystore with the certificate if using SSL)
-      - CASSANDRA_HOST
-      - CASSANDRA_PORT
-      - CASSANDRA_USERNAME
-      - CASSANDRA_PASSWORD
-      - CASSANDRA_SSL_ENABLED
-      - CASSANDRA_KEYSTORE (only if sslEnabled=true)
-      - CASSANDRA_KEYSTORE_PASSWORD (only if sslEnabled=true)
-    - Run the spark app using this
-      ```sh
-      java -jar iot-spark-processor/target/iot-spark-processor-1.0.0.jar
-      ```
 
-  ***KSQL hasn't been revived and tested; Spark should used for data processing***
+    _OPTIONAL_ Create a Java keystore with your SSL certificate if SSL is being used:
+    ```bash
+    keytool -genkey -alias yb -keyalg RSA -keystore $HOME/ybkeystore.jks
+    keytool -importcert -alias ybcert -file root.crt -keystore $HOME/ybkeystore.jks 
+    ```
+  
+    Set the following environment variables:
+    - CASSANDRA_HOST
+    - CASSANDRA_PORT
+    - CASSANDRA_USERNAME
+    - CASSANDRA_PASSWORD
+    - CASSANDRA_SSL_ENABLED
+    - CASSANDRA_KEYSTORE (only if sslEnabled=true)
+    - CASSANDRA_KEYSTORE_PASSWORD (only if sslEnabled=true)
+    
+    Run the spark app:
+    ```bash
+    mvn clean package -f iot-spark-processor
+    java -jar iot-spark-processor/target/iot-spark-processor-1.0.0.jar
+    ```
+3. Start the Dashboard application
 
-  - KSQL
-    - Setup the KSQL tables/streams
-      ```
-      ksql <<EOF
-      RUN SCRIPT './iot-ksql-processor/setup_streams.ksql';
-      exit
-      EOF
-      ```
-    - Run the connect sink from KSQL processed data
-      ```
-      cd ~/yb-kafka/confluent-os/confluent-7.4.0
-      nohup ./bin/connect-standalone ./etc/kafka/kafka.ksql.connect.properties ./etc/kafka-connect-yugabyte/total_traffic.sink.properties ./etc/kafka-connect-yugabyte/window_traffic.sink.properties ./etc/kafka-connect-yugabyte/poi_traffic.sink.properties >& ksql_sink.txt &
-      ```
-
-3. Start the UI application.
-   - Set the following environment variables:
-     - CASSANDRA_HOST
-     - CASSANDRA_PORT
-     - CASSANDRA_USERNAME
-     - CASSANDRA_PASSWORD
-     - CASSANDRA_SSL_ENABLED
-     - CASSANDRA_SSL_CERTIFICATE (only if sslEnabled=true) _This should be the path to the certificate file_
-   - Start the application
-     ```sh
-     java -jar ~/yb-iot-fleet-management/iot-springboot-dashboard/target/iot-springboot-dashboard-1.0.0.jar
-     ```
-
-4. Now open the dashboard UI in a web browser. The application will refresh itself periodically.
+   Set the following environment variables:
+   - CASSANDRA_HOST
+   - CASSANDRA_PORT
+   - CASSANDRA_USERNAME
+   - CASSANDRA_PASSWORD
+   - CASSANDRA_SSL_ENABLED
+   - CASSANDRA_SSL_CERTIFICATE (only if sslEnabled=true) _This should be the path to the certificate file_
+   
+   Start the application
+   ```bash
+   mvn clean package spring-boot:run -f iot-springboot-dashboard
    ```
-   http://localhost:8080
+
+4. Open the Dashboard UI
+   ```
+   open http://localhost:8080
    ```
