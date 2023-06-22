@@ -31,105 +31,140 @@ import scala.Tuple2;
 import scala.Tuple3;
 
 /**
- * This class consumes Kafka IoT messages and creates stream for processing the IoT data.
+ * This class consumes Kafka IoT messages and creates stream for processing the
+ * IoT data.
  * 
  * @author abaghel
  *
  */
 public class IoTDataProcessor {
-	
-	 private static final Logger logger = Logger.getLogger(IoTDataProcessor.class);
-	
-	 public static void main(String[] args) throws Exception {
-		 //read Spark and Cassandra properties and create SparkConf
-	         Properties prop = PropertyFileReader.readPropertyFile();
-                 String cassandraHost = prop.getProperty("com.iot.app.cassandra.host");
-		 if (System.getProperty("com.iot.app.cassandra.host") != null) {
-		     cassandraHost = System.getProperty("com.iot.app.cassandra.host");
-		 }
-	         String cassandraPort = prop.getProperty("com.iot.app.cassandra.port");
-		 if (System.getProperty("com.iot.app.cassandra.port") != null) {
-		     cassandraPort = System.getProperty("com.iot.app.cassandra.port");
-		 }
-		 SparkConf conf = new SparkConf()
-                                 .setAppName(prop.getProperty("com.iot.app.spark.app.name"))
-	                         .setMaster(prop.getProperty("com.iot.app.spark.master"))
-                                 .set("spark.cassandra.connection.host", cassandraHost)
-                                 .set("spark.cassandra.connection.port", cassandraPort)
-                                 .set("spark.cassandra.connection.keep_alive_ms", prop.getProperty("com.iot.app.cassandra.keep_alive"));
-		 //batch interval of 5 seconds for incoming stream		 
-		 JavaStreamingContext jssc = new JavaStreamingContext(conf, Durations.seconds(5));	
-		 //add check point directory
-		 jssc.checkpoint(prop.getProperty("com.iot.app.spark.checkpoint.dir"));
-		 
-		 //read and set Kafka properties
-		 Map<String, String> kafkaParams = new HashMap<String, String>();
-		 kafkaParams.put("zookeeper.connect", prop.getProperty("com.iot.app.kafka.zookeeper"));
-		 kafkaParams.put("metadata.broker.list", prop.getProperty("com.iot.app.kafka.brokerlist"));
-		 String topic = prop.getProperty("com.iot.app.kafka.topic");
-		 Set<String> topicsSet = new HashSet<String>();
-		 topicsSet.add(topic);
-		 //create direct kafka stream
-		 JavaPairInputDStream<String, IoTData> directKafkaStream = KafkaUtils.createDirectStream(
-			        jssc,
-			        String.class,
-			        IoTData.class,
-			        StringDecoder.class,
-			        IoTDataDecoder.class,
-			        kafkaParams,
-			        topicsSet
-			    );
-		 logger.info("Starting Stream Processing");
-		 
-		 //We need non filtered stream for poi traffic data calculation
-		 JavaDStream<IoTData> nonFilteredIotDataStream = directKafkaStream.map(tuple -> tuple._2());
-		 
-		 //We need filtered stream for total and traffic data calculation
-		 JavaPairDStream<String,IoTData> iotDataPairStream = nonFilteredIotDataStream.mapToPair(iot -> new Tuple2<String,IoTData>(iot.getVehicleId(),iot)).reduceByKey((a, b) -> a );
-		
-		 // Check vehicle Id is already processed
-		 JavaMapWithStateDStream<String, IoTData, Boolean, Tuple2<IoTData,Boolean>> iotDStreamWithStatePairs = iotDataPairStream
-							.mapWithState(StateSpec.function(processedVehicleFunc).timeout(Durations.seconds(3600)));//maintain state for one hour
 
-		 // Filter processed vehicle ids and keep un-processed
-		 JavaDStream<Tuple2<IoTData,Boolean>> filteredIotDStreams = iotDStreamWithStatePairs.map(tuple2 -> tuple2)
-							.filter(tuple -> tuple._2.equals(Boolean.FALSE));
+	private static final Logger logger = Logger.getLogger(IoTDataProcessor.class);
 
-		 // Get stream of IoTdata
-		 JavaDStream<IoTData> filteredIotDataStream = filteredIotDStreams.map(tuple -> tuple._1);
-		 
-		 //cache stream as it is used in total and window based computation
-		 filteredIotDataStream.cache();
-		 	 
-		 //process data
-		 IoTTrafficDataProcessor iotTrafficProcessor = new IoTTrafficDataProcessor();
-		 iotTrafficProcessor.processTotalTrafficData(filteredIotDataStream);
-		 iotTrafficProcessor.processWindowTrafficData(filteredIotDataStream);
+	public static void main(String[] args) throws Exception {
+		// read Spark and Cassandra properties and create SparkConf
+		Properties prop = PropertyFileReader.readPropertyFile();
+		String cassandraHost = prop.getProperty("cassandra.host");
+		if (System.getenv("CASSANDRA_HOST") != null) {
+			cassandraHost = System.getenv("CASSANDRA_HOST");
+		}
+		String cassandraPort = prop.getProperty("cassandra.port");
+		if (System.getenv("CASSANDRA_PORT") != null) {
+			cassandraPort = System.getenv("CASSANDRA_PORT");
+		}
+		String cassandraUsername = prop.getProperty("cassandra.username");
+		if (System.getenv("CASSANDRA_USERNAME") != null) {
+			cassandraUsername = System.getenv("CASSANDRA_USERNAME");
+		}
+		String cassandraPassword = prop.getProperty("cassandra.password");
+		if (System.getenv("CASSANDRA_PASSWORD") != null) {
+			cassandraPassword = System.getenv("CASSANDRA_PASSWORD");
+		}
+		String cassandraSslEnabled = prop.getProperty("cassandra.sslEnabled");
+		if (System.getenv("CASSANDRA_SSL_ENABLED") != null) {
+			cassandraSslEnabled = System.getenv("CASSANDRA_SSL_ENABLED");
+		}
+		String cassandraKeystore = prop.getProperty("cassandra.keystore");
+		if (System.getenv("CASSANDRA_KEYSTORE") != null) {
+			cassandraKeystore = System.getenv("CASSANDRA_KEYSTORE");
+		}
+		String cassandraKeystorePassword = prop.getProperty("cassandra.keystorePassword");
+		if (System.getenv("CASSANDRA_KEYSTORE_PASSWORD") != null) {
+			cassandraKeystorePassword = System.getenv("CASSANDRA_KEYSTORE_PASSWORD");
+		}
+		SparkConf conf = new SparkConf()
+				.setAppName(prop.getProperty("spark.app.name"))
+				.setMaster(prop.getProperty("spark.master"))
+				.set("spark.cassandra.connection.host", cassandraHost)
+				.set("spark.cassandra.connection.port", cassandraPort)
+				.set("spark.cassandra.connection.keep_alive_ms", prop.getProperty("cassandra.keep_alive"))
+				.set("spark.cassandra.auth.username", cassandraUsername)
+				.set("spark.cassandra.auth.password", cassandraPassword);
+		if ("true".equalsIgnoreCase(cassandraSslEnabled)) {
+			conf.set("spark.cassandra.connection.ssl.enabled", cassandraSslEnabled);
+			conf.set("spark.cassandra.connection.ssl.trustStore.path", cassandraKeystore);
+			conf.set("spark.cassandra.connection.ssl.trustStore.password", cassandraKeystorePassword);
+		}
 
-		 //poi data
-		 POIData poiData = new POIData();
-		 poiData.setLatitude(33.877495);
-		 poiData.setLongitude(-95.50238);
-		 poiData.setRadius(30);//30 km
-		 
-		 //broadcast variables. We will monitor vehicles on Route 37 which are of type Truck
-		 Broadcast<Tuple3<POIData, String, String>> broadcastPOIValues = jssc.sparkContext().broadcast(new Tuple3<>(poiData,"Route-37","Truck"));
-		 //call method  to process stream
-		 iotTrafficProcessor.processPOIData(nonFilteredIotDataStream,broadcastPOIValues);
-		 
-		 //start context
-		 jssc.start();            
-		 jssc.awaitTermination();  
-  }
-	 //Funtion to check processed vehicles.
-	private static final Function3<String, Optional<IoTData>, State<Boolean>, Tuple2<IoTData,Boolean>> processedVehicleFunc = (String, iot, state) -> {
-			Tuple2<IoTData,Boolean> vehicle = new Tuple2<>(iot.get(),false);
-			if(state.exists()){
-				vehicle = new Tuple2<>(iot.get(),true);
-			}else{
-				state.update(Boolean.TRUE);
-			}			
-			return vehicle;
-		};
-          
+		// batch interval of 5 seconds for incoming stream
+		JavaStreamingContext jssc = new JavaStreamingContext(conf, Durations.seconds(5));
+		// add check point directory
+		jssc.checkpoint(prop.getProperty("spark.checkpoint.dir"));
+
+		// read and set Kafka properties
+		Map<String, String> kafkaParams = new HashMap<String, String>();
+		kafkaParams.put("zookeeper.connect", prop.getProperty("kafka.zookeeper"));
+		kafkaParams.put("metadata.broker.list", prop.getProperty("kafka.brokerlist"));
+		String topic = prop.getProperty("kafka.topic");
+		Set<String> topicsSet = new HashSet<String>();
+		topicsSet.add(topic);
+		// create direct kafka stream
+		JavaPairInputDStream<String, IoTData> directKafkaStream = KafkaUtils.createDirectStream(
+				jssc,
+				String.class,
+				IoTData.class,
+				StringDecoder.class,
+				IoTDataDecoder.class,
+				kafkaParams,
+				topicsSet);
+		logger.info("Starting Stream Processing");
+
+		// We need non filtered stream for poi traffic data calculation
+		JavaDStream<IoTData> nonFilteredIotDataStream = directKafkaStream.map(tuple -> tuple._2());
+
+		// We need filtered stream for total and traffic data calculation
+		JavaPairDStream<String, IoTData> iotDataPairStream = nonFilteredIotDataStream
+				.mapToPair(iot -> new Tuple2<String, IoTData>(iot.getVehicleId(), iot)).reduceByKey((a, b) -> a);
+
+		// Check vehicle Id is already processed
+		JavaMapWithStateDStream<String, IoTData, Boolean, Tuple2<IoTData, Boolean>> iotDStreamWithStatePairs = iotDataPairStream
+				.mapWithState(StateSpec.function(processedVehicleFunc).timeout(Durations.seconds(3600)));// maintain
+																											// state for
+																											// one hour
+
+		// Filter processed vehicle ids and keep un-processed
+		JavaDStream<Tuple2<IoTData, Boolean>> filteredIotDStreams = iotDStreamWithStatePairs.map(tuple2 -> tuple2)
+				.filter(tuple -> tuple._2.equals(Boolean.FALSE));
+
+		// Get stream of IoTdata
+		JavaDStream<IoTData> filteredIotDataStream = filteredIotDStreams.map(tuple -> tuple._1);
+
+		// cache stream as it is used in total and window based computation
+		filteredIotDataStream.cache();
+
+		// process data
+		IoTTrafficDataProcessor iotTrafficProcessor = new IoTTrafficDataProcessor();
+		iotTrafficProcessor.processTotalTrafficData(filteredIotDataStream);
+		iotTrafficProcessor.processWindowTrafficData(filteredIotDataStream);
+
+		// poi data
+		POIData poiData = new POIData();
+		poiData.setLatitude(33.877495);
+		poiData.setLongitude(-95.50238);
+		poiData.setRadius(30);// 30 km
+
+		// broadcast variables. We will monitor vehicles on Route 37 which are of type
+		// Truck
+		Broadcast<Tuple3<POIData, String, String>> broadcastPOIValues = jssc.sparkContext()
+				.broadcast(new Tuple3<>(poiData, "Route-37", "Truck"));
+		// call method to process stream
+		iotTrafficProcessor.processPOIData(nonFilteredIotDataStream, broadcastPOIValues);
+
+		// start context
+		jssc.start();
+		jssc.awaitTermination();
+	}
+
+	// Funtion to check processed vehicles.
+	private static final Function3<String, Optional<IoTData>, State<Boolean>, Tuple2<IoTData, Boolean>> processedVehicleFunc = (
+			String, iot, state) -> {
+		Tuple2<IoTData, Boolean> vehicle = new Tuple2<>(iot.get(), false);
+		if (state.exists()) {
+			vehicle = new Tuple2<>(iot.get(), true);
+		} else {
+			state.update(Boolean.TRUE);
+		}
+		return vehicle;
+	};
+
 }
